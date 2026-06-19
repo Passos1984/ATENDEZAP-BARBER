@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>AtendeZap Barber</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <div class="container">
+
+    <h1>💈 AtendeZap Barber</h1>
+    <p>Sistema simples para barbearias organizarem clientes no WhatsApp</p>
+
+    <div class="card">
+      <h2>➕ Novo Cliente</h2>
+
+      <input type="text" id="nome" placeholder="Nome do cliente">
+      <input type="text" id="tel" placeholder="WhatsApp (DDD + número)">
+      <input type="text" id="servico" placeholder="Serviço (corte, barba...)">
+      <input type="text" id="horario" placeholder="Horário agendado">
+
+      <button onclick="addClient()">Salvar Cliente</button>
+    </div>
+
+    <div class="card">
+      <h2>💬 Mensagem Rápida</h2>
+
+      <select id="clientes"></select>
+
+      <textarea id="msg">
+Olá! Seu horário está confirmado 💈
+Estamos te esperando na barbearia 👍
+      </textarea>
+
+      <button onclick="sendWhats()">Enviar WhatsApp</button>
+    </div>
+
+    <div class="card">
+      <h2>📋 Clientes</h2>
+      <div id="lista"></div>
+    </div>
+
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

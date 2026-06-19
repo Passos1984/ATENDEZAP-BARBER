@@ -1,0 +1,55 @@
+body {
+  font-family: Arial;
+  background: #0b1220;
+  color: white;
+  margin: 0;
+}
+
+.container {
+  max-width: 800px;
+  margin: auto;
+  padding: 20px;
+}
+
+h1 {
+  text-align: center;
+  color: #fbbf24;
+}
+
+.card {
+  background: #1e293b;
+  padding: 15px;
+  margin-top: 15px;
+  border-radius: 10px;
+}
+
+input, textarea, select {
+  width: 100%;
+  padding: 10px;
+  margin-top: 8px;
+  border-radius: 6px;
+  border: none;
+}
+
+button {
+  width: 100%;
+  margin-top: 10px;
+  padding: 10px;
+  background: #fbbf24;
+  border: none;
+  font-weight: bold;
+  cursor: pointer;
+  border-radius: 6px;
+  color: black;
+}
+
+button:hover {
+  background: #f59e0b;
+}
+
+.cliente {
+  background: #334155;
+  padding: 10px;
+  margin-top: 10px;
+  border-radius: 6px;
+}
