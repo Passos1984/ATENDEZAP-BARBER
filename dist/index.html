@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AtendeZap Barber Premium</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <section id="authScreen" class="auth-screen">
+    <div class="auth-panel">
+      <div class="auth-brand">
+        <p class="eyebrow">Barbearia</p>
+        <h2>AtendeZap Barber</h2>
+      </div>
+      <div class="auth-tabs">
+        <button type="button" class="auth-tab active" id="showLoginBtn">Entrar</button>
+        <button type="button" class="auth-tab" id="showRegisterBtn">Criar conta</button>
+      </div>
+
+      <form id="loginForm" class="auth-form">
+        <input type="email" id="loginEmail" placeholder="E-mail" required>
+        <input type="password" id="loginPassword" placeholder="Senha" required>
+        <button type="submit" class="btn btn-primary">Entrar</button>
+      </form>
+
+      <form id="registerForm" class="auth-form hidden">
+        <input type="text" id="registerName" placeholder="Nome da barbearia ou usuário" required>
+        <input type="email" id="registerEmail" placeholder="E-mail" required>
+        <input type="password" id="registerPassword" placeholder="Senha" required>
+        <input type="password" id="registerConfirm" placeholder="Confirmar senha" required>
+        <button type="submit" class="btn btn-primary">Criar conta</button>
+      </form>
+
+      <p id="authMessage" class="auth-message"></p>
+    </div>
+  </section>
+
+  <div id="appScreen" class="app-shell hidden">
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">Barbearia</p>
+        <h1>AtendeZap Barber</h1>
+      </div>
+      <div class="topbar-actions">
+        <span id="userBadge" class="user-badge"></span>
+        <button class="btn btn-secondary" onclick="logout()">Sair</button>
+        <button class="btn btn-primary" onclick="focusClientForm()">+ Novo agendamento</button>
+      </div>
+    </header>
+
+    <section class="dashboard">
+      <div class="stat-card gold">
+        <span>Total</span>
+        <strong id="totalClientes">0</strong>
+        <small>clientes cadastrados</small>
+      </div>
+      <div class="stat-card blue">
+        <span>Hoje</span>
+        <strong id="agendamentosHoje">0</strong>
+        <small>hoje</small>
+      </div>
+      <div class="stat-card orange">
+        <span>Pendentes</span>
+        <strong id="pendentes">0</strong>
+        <small>esperando confirmação</small>
+      </div>
+      <div class="stat-card green">
+        <span>Concluídos</span>
+        <strong id="concluidos">0</strong>
+        <small>serviços realizados</small>
+      </div>
+    </section>
+
+    <main class="content-grid">
+      <section class="card form-card">
+        <div class="card-header">
+          <h2 id="formTitle">➕ Novo Cliente</h2>
+        </div>
+        <form id="clientForm" onsubmit="event.preventDefault(); saveClient();">
+          <input type="text" id="nome" placeholder="Nome do cliente" required>
+          <input type="tel" id="tel" placeholder="WhatsApp (DDD + número)" required>
+          <input type="text" id="servico" placeholder="Serviço (corte, barba, sobrancelha)">
+          <input type="datetime-local" id="horario">
+          <select id="status">
+            <option value="Pendente">Pendente</option>
+            <option value="Confirmado">Confirmado</option>
+            <option value="Concluído">Concluído</option>
+          </select>
+          <div class="form-actions">
+            <button type="submit" class="btn btn-primary" id="saveBtn">Salvar cliente</button>
+            <button type="button" class="btn btn-secondary hidden" id="cancelEditBtn" onclick="cancelEdit()">Cancelar</button>
+          </div>
+        </form>
+      </section>
+
+      <section class="card message-card">
+        <div class="card-header">
+          <h2>💬 Mensagem rápida</h2>
+        </div>
+        <select id="clientes"></select>
+        <textarea id="msg">Olá! Seu horário está confirmado 💈
+Estamos te esperando na barbearia 👍</textarea>
+        <button class="btn btn-primary" onclick="sendWhats()">Enviar WhatsApp</button>
+      </section>
+    </main>
+
+    <section class="card table-card">
+      <div class="card-header">
+        <h2>📋 Clientes agendados</h2>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Cliente</th>
+              <th>WhatsApp</th>
+              <th>Serviço</th>
+              <th>Horário</th>
+              <th>Status</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody id="lista"></tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+  <script src="firebase-config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

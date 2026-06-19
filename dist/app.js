@@ -1,24 +1,5 @@
-// ==========================================
-// 1. CONFIGURAÇÃO DO FIREBASE
-// ==========================================
-const firebaseConfig = {
-  apiKey: "AIzaSyAU4RPw-GEPdWhXgOEcuBHvpsqAoS9OBPA",
-  authDomain: "atendezap-barber.firebaseapp.com",
-  projectId: "atendezap-barber",
-  storageBucket: "atendezap-barber.firebasestorage.app",
-  messagingSenderId: "463357013064",
-  appId: "1:463357013064:web:7f7f52df31b5250cdd3c7d",
-  measurementId: "G-DSQVL423LZ"
-};
-
-// Inicializa a conexão
-window.firebaseConfig = firebaseConfig;
-firebase.initializeApp(firebaseConfig);
-window.db = firebase.firestore();
-
-// ==========================================
-// 2. LÓGICA DO APLICATIVO (SaaS)
-// ==========================================
+const STORAGE_KEY = "barber-premium";
+const AUTH_KEY = "barber-auth";
 let clientes = [];
 let editIndex = null;
 let currentUser = null;
@@ -42,15 +23,13 @@ function generateId() {
 }
 
 async function syncToFirebase() {
-  if (!isFirebaseReady() || !currentUser) return;
+  if (!isFirebaseReady()) return;
 
   const batch = [];
-  const uid = currentUser.uid;
 
   for (const cliente of clientes) {
     const id = cliente.id || generateId();
-    // Vincula o cliente à barbearia atual
-    const docData = { ...cliente, id, userId: uid };
+    const docData = { ...cliente, id };
 
     if (!cliente.id) {
       cliente.id = id;
@@ -62,21 +41,6 @@ async function syncToFirebase() {
   }
 
   await Promise.all(batch);
-}
-
-async function loadClientesFromFirebase() {
-  if (!isFirebaseReady() || !currentUser) return;
-
-  try {
-    const snapshot = await window.db.collection("clientes")
-      .where("userId", "==", currentUser.uid)
-      .get();
-
-    clientes = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-    render();
-  } catch (error) {
-    console.error("Erro ao carregar clientes:", error);
-  }
 }
 
 function formatDateTime(value) {
@@ -105,15 +69,17 @@ function showAppScreen() {
 }
 
 function logout() {
-  if (isFirebaseReady()) {
-    firebase.auth().signOut().then(() => {
-      currentUser = null;
-      clientes = [];
-      render();
-      showAuthScreen();
-      setAuthMessage("Você saiu da conta.");
-    });
-  }
+  currentUser = null;
+  localStorage.removeItem(AUTH_KEY);
+  showAuthScreen();
+  setAuthMessage("Você saiu da conta.");
+}
+
+function saveSession(user) {
+  currentUser = user;
+  localStorage.setItem(AUTH_KEY, JSON.stringify(user));
+  document.getElementById("userBadge").textContent = user.name || user.email;
+  showAppScreen();
 }
 
 function toggleAuthMode(mode) {
@@ -144,35 +110,33 @@ function registerUser(name, email, password, confirmPassword) {
     setAuthMessage("Preencha todos os campos.", true);
     return;
   }
+
   if (!validateEmail(email)) {
     setAuthMessage("Informe um e-mail válido.", true);
     return;
   }
+
   if (password.length < 6) {
     setAuthMessage("A senha precisa ter pelo menos 6 caracteres.", true);
     return;
   }
+
   if (password !== confirmPassword) {
     setAuthMessage("As senhas não coincidem.", true);
     return;
   }
 
-  if (isFirebaseReady()) {
-    firebase.auth().createUserWithEmailAndPassword(email, password)
-      .then((userCredential) => {
-        return userCredential.user.updateProfile({
-          displayName: name
-        });
-      })
-      .then(() => {
-        setAuthMessage("Conta criada com sucesso!");
-      })
-      .catch((error) => {
-        setAuthMessage("Erro: " + error.message, true);
-      });
-  } else {
-    setAuthMessage("Erro: Configure o Firebase para criar contas.", true);
+  const users = JSON.parse(localStorage.getItem("barber-users") || "[]");
+  if (users.some((u) => u.email.toLowerCase() === email.toLowerCase())) {
+    setAuthMessage("Este e-mail já está cadastrado.", true);
+    return;
   }
+
+  const user = { name, email, password };
+  users.push(user);
+  localStorage.setItem("barber-users", JSON.stringify(users));
+  setAuthMessage("Conta criada com sucesso! Faça login agora.");
+  toggleAuthMode("login");
 }
 
 function loginUser(email, password) {
@@ -181,12 +145,18 @@ function loginUser(email, password) {
     return;
   }
 
-  if (isFirebaseReady()) {
-    firebase.auth().signInWithEmailAndPassword(email, password)
-      .catch((error) => {
-        setAuthMessage("E-mail ou senha inválidos.", true);
-      });
+  const users = JSON.parse(localStorage.getItem("barber-users") || "[]");
+  const user = users.find(
+    (u) => u.email.toLowerCase() === email.toLowerCase() && u.password === password
+  );
+
+  if (!user) {
+    setAuthMessage("E-mail ou senha inválidos.", true);
+    return;
   }
+
+  saveSession(user);
+  setAuthMessage("");
 }
 
 function getStatusClass(status) {
@@ -218,9 +188,10 @@ async function saveClient() {
   if (editIndex !== null) {
     clientes[editIndex] = { ...clientes[editIndex], ...cliente };
   } else {
-    clientes.push({ ...cliente, id: generateId(), userId: currentUser ? currentUser.uid : null });
+    clientes.push({ ...cliente, id: generateId() });
   }
 
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(clientes));
   await syncToFirebase();
   resetForm();
   render();
@@ -264,6 +235,7 @@ async function deleteClient(index) {
   if (!confirmar) return;
 
   clientes.splice(index, 1);
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(clientes));
 
   if (isFirebaseReady() && cliente.id) {
     await window.db.collection("clientes").doc(cliente.id).delete();
@@ -354,7 +326,16 @@ function sendWhats() {
   window.open(url, "_blank");
 }
 
-function bootstrap() {
+async function bootstrap() {
+  const storedUser = JSON.parse(localStorage.getItem(AUTH_KEY) || "null");
+  if (storedUser) {
+    currentUser = storedUser;
+    document.getElementById("userBadge").textContent = storedUser.name || storedUser.email;
+    showAppScreen();
+  } else {
+    showAuthScreen();
+  }
+
   document.getElementById("showLoginBtn").addEventListener("click", () => toggleAuthMode("login"));
   document.getElementById("showRegisterBtn").addEventListener("click", () => toggleAuthMode("register"));
 
@@ -376,20 +357,16 @@ function bootstrap() {
     );
   });
 
-  if (isFirebaseReady()) {
-    firebase.auth().onAuthStateChanged((user) => {
-      if (user) {
-        currentUser = user;
-        document.getElementById("userBadge").textContent = user.displayName || user.email;
-        showAppScreen();
-        loadClientesFromFirebase();
-      } else {
-        currentUser = null;
-        showAuthScreen();
-      }
-    });
-  } else {
-    setAuthMessage("Aviso: Conecte o Firebase para habilitar o login.", true);
+  try {
+    if (isFirebaseReady()) {
+      const snapshot = await window.db.collection("clientes").get();
+      clientes = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+    } else {
+      clientes = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+    }
+  } catch (error) {
+    console.warn("Falha ao carregar dados do Firebase, usando localStorage.", error);
+    clientes = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
   }
 
   resetForm();
