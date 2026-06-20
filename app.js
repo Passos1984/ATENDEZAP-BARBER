@@ -19,9 +19,11 @@ window.db = firebase.firestore();
 // ==========================================
 // 2. LÓGICA DO APLICATIVO (SaaS)
 // ==========================================
+const STORAGE_KEY = "barber-premium";
 let clientes = [];
 let editIndex = null;
 let currentUser = null;
+let barbeiros = [];
 
 function normalizePhone(value) {
   return (value || "").replace(/\D/g, "");
@@ -85,6 +87,27 @@ function formatDateTime(value) {
     dateStyle: "short",
     timeStyle: "short"
   });
+}
+
+function parseDate(value) {
+  if (!value) return null;
+  const date = new Date(value);
+  return isNaN(date.getTime()) ? null : date;
+}
+
+function isSameDay(a, b) {
+  return a.getDate() === b.getDate() &&
+    a.getMonth() === b.getMonth() &&
+    a.getFullYear() === b.getFullYear();
+}
+
+function isSameMonth(a, b) {
+  return a.getMonth() === b.getMonth() &&
+    a.getFullYear() === b.getFullYear();
+}
+
+function formatCurrency(value) {
+  return `R$ ${Number(value || 0).toFixed(2).replace('.', ',')}`;
 }
 
 function setAuthMessage(message, isError = false) {
@@ -202,6 +225,8 @@ async function saveClient() {
   const nome = document.getElementById("nome").value.trim();
   const tel = normalizePhone(document.getElementById("tel").value);
   const servico = document.getElementById("servico").value.trim();
+  const barbeiro = document.getElementById("barbeiro").value;
+  const valor = parseFloat(document.getElementById("valor").value) || 0;
   const horario = document.getElementById("horario").value;
   const status = document.getElementById("status").value;
 
@@ -211,21 +236,29 @@ async function saveClient() {
     nome,
     tel,
     servico,
+    barbeiro,
+    valor,
     horario,
     status
   };
 
   if (editIndex !== null) {
-    clientes[editIndex] = { ...clientes[editIndex], ...cliente };
+    clientes[editIndex] = {
+      ...clientes[editIndex],
+      ...cliente
+    };
   } else {
-    clientes.push({ ...cliente, id: generateId(), userId: currentUser ? currentUser.uid : null });
+    clientes.push({
+      ...cliente,
+      id: generateId(),
+      userId: currentUser ? currentUser.uid : null
+    });
   }
 
   await syncToFirebase();
   resetForm();
   render();
 }
-
 function resetForm() {
   document.getElementById("clientForm").reset();
   document.getElementById("status").value = "Pendente";
@@ -239,9 +272,11 @@ function editClient(index) {
   const cliente = clientes[index];
   if (!cliente) return;
 
-  document.getElementById("nome").value = cliente.nome;
-  document.getElementById("tel").value = cliente.tel;
+  document.getElementById("nome").value = cliente.nome || "";
+  document.getElementById("tel").value = cliente.tel || "";
   document.getElementById("servico").value = cliente.servico || "";
+  document.getElementById("barbeiro").value = cliente.barbeiro || "";
+  document.getElementById("valor").value = cliente.valor || "";
   document.getElementById("horario").value = cliente.horario || "";
   document.getElementById("status").value = cliente.status || "Pendente";
 
@@ -254,6 +289,20 @@ function editClient(index) {
 
 function cancelEdit() {
   resetForm();
+}
+
+async function concluirAtendimento(index) {
+  const cliente = clientes[index];
+  if (!cliente) return;
+
+  clientes[index] = {
+    ...cliente,
+    status: "Concluído"
+  };
+
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(clientes));
+  await syncToFirebase();
+  render();
 }
 
 async function deleteClient(index) {
@@ -275,24 +324,104 @@ async function deleteClient(index) {
 function focusClientForm() {
   document.getElementById("nome").focus();
 }
+function addBarbeiro() {
+
+  const input = document.getElementById("novoBarbeiro");
+
+  const nome = input.value.trim();
+
+  if (!nome) return;
+
+  barbeiros.push(nome);
+
+  renderBarbeiros();
+
+  input.value = "";
+}
+function renderBarbeiros() {
+
+  const lista = document.getElementById("listaBarbeiros");
+
+  const select = document.getElementById("barbeiro");
+
+  lista.innerHTML = "";
+
+  select.innerHTML =
+    '<option value="">Selecione o barbeiro</option>';
+
+  barbeiros.forEach((barbeiro, index) => {
+
+    lista.innerHTML += `
+      <div class="barbeiro-card">
+
+        <div class="barbeiro-info">
+
+          <span class="barbeiro-name">
+            ${barbeiro}
+          </span>
+
+          <button
+            class="btn btn-danger btn-small"
+            onclick="removeBarbeiro(${index})">
+
+            Excluir
+
+          </button>
+
+        </div>
+
+      </div>
+    `;
+
+    select.innerHTML += `
+      <option value="${barbeiro}">
+        ${barbeiro}
+      </option>
+    `;
+
+  });
+
+}
+function removeBarbeiro(index) {
+
+  barbeiros.splice(index, 1);
+
+  renderBarbeiros();
+
+}
 
 function renderDashboard() {
-  const total = clientes.length;
+  const hojeDate = new Date();
   const hoje = clientes.filter((cliente) => {
-    if (!cliente.horario) return false;
-    const data = new Date(cliente.horario);
-    const hojeDate = new Date();
-    return data.getDate() === hojeDate.getDate() &&
-      data.getMonth() === hojeDate.getMonth() &&
-      data.getFullYear() === hojeDate.getFullYear();
+    const data = parseDate(cliente.horario);
+    return data && isSameDay(data, hojeDate);
   }).length;
+
   const pendentes = clientes.filter((cliente) => cliente.status !== "Concluído").length;
   const concluidos = clientes.filter((cliente) => cliente.status === "Concluído").length;
 
-  document.getElementById("totalClientes").textContent = total;
+  const faturamentoHoje = clientes.reduce((total, cliente) => {
+    const data = parseDate(cliente.horario);
+    if (!data || !isSameDay(data, hojeDate) || cliente.status !== "Concluído") {
+      return total;
+    }
+    return total + (Number(cliente.valor) || 0);
+  }, 0);
+
+  const faturamentoMes = clientes.reduce((total, cliente) => {
+    const data = parseDate(cliente.horario);
+    if (!data || !isSameMonth(data, hojeDate) || cliente.status !== "Concluído") {
+      return total;
+    }
+    return total + (Number(cliente.valor) || 0);
+  }, 0);
+
+  document.getElementById("totalClientes").textContent = clientes.length;
   document.getElementById("agendamentosHoje").textContent = hoje;
   document.getElementById("pendentes").textContent = pendentes;
   document.getElementById("concluidos").textContent = concluidos;
+  document.getElementById("faturamentoHoje").textContent = formatCurrency(faturamentoHoje);
+  document.getElementById("faturamentoMes").textContent = formatCurrency(faturamentoMes);
 }
 
 function render() {
@@ -305,7 +434,7 @@ function render() {
   if (!clientes.length) {
     lista.innerHTML = `
       <tr>
-        <td colspan="6" class="empty-state">Nenhum cliente cadastrado ainda.</td>
+        <td colspan="8" class="empty-state">Nenhum cliente cadastrado ainda.</td>
       </tr>
     `;
     select.innerHTML = `<option value="">Nenhum cliente</option>`;
@@ -316,22 +445,69 @@ function render() {
   clientes.forEach((cliente, index) => {
     const statusClass = getStatusClass(cliente.status || "Pendente");
 
-    lista.innerHTML += `
-      <tr>
-        <td>
-          <strong>${cliente.nome}</strong>
-        </td>
-        <td>${cliente.tel}</td>
-        <td>${cliente.servico || "—"}</td>
-        <td>${formatDateTime(cliente.horario)}</td>
-        <td><span class="status-pill ${statusClass}">${cliente.status || "Pendente"}</span></td>
-        <td>
-          <button class="btn btn-small btn-secondary" onclick="editClient(${index})">Editar</button>
-          <button class="btn btn-small btn-danger" onclick="deleteClient(${index})">Excluir</button>
-        </td>
-      </tr>
-    `;
+   lista.innerHTML += `
+<tr>
 
+<td>
+<strong>${cliente.nome}</strong>
+</td>
+
+<td>
+${cliente.tel}
+</td>
+
+<td>
+${cliente.servico || "-"}
+</td>
+
+<td>
+${cliente.barbeiro || "-"}
+</td>
+
+<td>
+R$ ${Number(cliente.valor || 0).toFixed(2)}
+</td>
+
+<td>
+${formatDateTime(cliente.horario)}
+</td>
+
+<td>
+<span class="status-pill ${statusClass}">
+${cliente.status || "Pendente"}
+</span>
+</td>
+
+<td>
+
+<button
+class="btn btn-small btn-secondary"
+onclick="editClient(${index})">
+
+Editar
+
+</button>
+
+<button
+class="btn btn-small btn-success"
+onclick="concluirAtendimento(${index})">
+
+Concluir
+
+</button>
+
+<button
+class="btn btn-small btn-danger"
+onclick="deleteClient(${index})">
+
+Excluir
+
+</button>
+
+</td>
+
+</tr>
+`;
     select.innerHTML += `<option value="${index}">${cliente.nome}</option>`;
   });
 

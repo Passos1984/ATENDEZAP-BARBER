@@ -124,7 +124,7 @@ textarea {
 
 .dashboard {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 16px;
   margin-bottom: 20px;
 }
@@ -164,6 +164,14 @@ textarea {
 
 .stat-card.green {
   border-top: 4px solid #34d399;
+}
+
+.stat-card.money {
+  border-top: 4px solid #22c55e;
+}
+
+.stat-card.money strong {
+  color: #86efac;
 }
 
 .content-grid {
@@ -245,6 +253,15 @@ textarea:focus,
 .btn-danger {
   background: #7f1d1d;
   color: #fff;
+}
+
+.btn-success {
+  background: #22c55e;
+  color: white;
+}
+
+.btn-success:hover {
+  background: #16a34a;
 }
 
 .btn-small {
