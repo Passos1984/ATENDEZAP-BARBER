@@ -2,13 +2,13 @@
 // 1. CONFIGURAÇÃO DO FIREBASE
 // ==========================================
 const firebaseConfig = {
-  apiKey: "AIzaSyAU4RPw-GEPdWhXgOEcuBHvpsqAoS9OBPA",
-  authDomain: "atendezap-barber.firebaseapp.com",
-  projectId: "atendezap-barber",
-  storageBucket: "atendezap-barber.firebasestorage.app",
-  messagingSenderId: "463357013064",
-  appId: "1:463357013064:web:7f7f52df31b5250cdd3c7d",
-  measurementId: "G-DSQVL423LZ"
+    apiKey: "AIzaSyAU4RPw-GEPdWhXgOEcuBHvpsqAoS9OBPA",
+    authDomain: "atendezap-barber.firebaseapp.com",
+    projectId: "atendezap-barber",
+    storageBucket: "atendezap-barber.firebasestorage.app",
+    messagingSenderId: "463357013064",
+    appId: "1:463357013064:web:7f7f52df31b5250cdd3c7d",
+    measurementId: "G-DSQVL423LZ"
 };
 
 // Inicializa a conexão
@@ -26,332 +26,332 @@ let currentUser = null;
 let barbeiros = [];
 
 function normalizePhone(value) {
-  return (value || "").replace(/\D/g, "");
+    return (value || "").replace(/\D/g, "");
 }
 
 function isFirebaseReady() {
-  return (
-    typeof window.db !== "undefined" &&
-    window.db &&
-    window.firebaseConfig &&
-    window.firebaseConfig.apiKey &&
-    !window.firebaseConfig.apiKey.includes("SUA_API_KEY")
-  );
+    return (
+        typeof window.db !== "undefined" &&
+        window.db &&
+        window.firebaseConfig &&
+        window.firebaseConfig.apiKey &&
+        !window.firebaseConfig.apiKey.includes("SUA_API_KEY")
+    );
 }
 
 function generateId() {
-  return `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+    return `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
 }
 
 async function syncToFirebase() {
-  if (!isFirebaseReady() || !currentUser) return;
+    if (!isFirebaseReady() || !currentUser) return;
 
-  const batch = [];
-  const uid = currentUser.uid;
+    const batch = [];
+    const uid = currentUser.uid;
 
-  for (const cliente of clientes) {
-    const id = cliente.id || generateId();
-    // Vincula o cliente à barbearia atual
-    const docData = { ...cliente, id, userId: uid };
+    for (const cliente of clientes) {
+        const id = cliente.id || generateId();
+        // Vincula o cliente à barbearia atual
+        const docData = { ...cliente, id, userId: uid };
 
-    if (!cliente.id) {
-      cliente.id = id;
+        if (!cliente.id) {
+            cliente.id = id;
+        }
+
+        batch.push(
+            window.db.collection("clientes").doc(id).set(docData)
+        );
     }
 
-    batch.push(
-      window.db.collection("clientes").doc(id).set(docData)
-    );
-  }
-
-  await Promise.all(batch);
+    await Promise.all(batch);
 }
 
 async function loadClientesFromFirebase() {
-  if (!isFirebaseReady() || !currentUser) return;
+    if (!isFirebaseReady() || !currentUser) return;
 
-  try {
-    const snapshot = await window.db.collection("clientes")
-      .where("userId", "==", currentUser.uid)
-      .get();
+    try {
+        const snapshot = await window.db.collection("clientes")
+            .where("userId", "==", currentUser.uid)
+            .get();
 
-    clientes = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-    render();
-  } catch (error) {
-    console.error("Erro ao carregar clientes:", error);
-  }
+        clientes = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+        render();
+    } catch (error) {
+        console.error("Erro ao carregar clientes:", error);
+    }
 }
 
 function formatDateTime(value) {
-  if (!value) return "Sem horário";
-  return new Date(value).toLocaleString("pt-BR", {
-    dateStyle: "short",
-    timeStyle: "short"
-  });
+    if (!value) return "Sem horário";
+    return new Date(value).toLocaleString("pt-BR", {
+        dateStyle: "short",
+        timeStyle: "short"
+    });
 }
 
 function parseDate(value) {
-  if (!value) return null;
-  const date = new Date(value);
-  return isNaN(date.getTime()) ? null : date;
+    if (!value) return null;
+    const date = new Date(value);
+    return isNaN(date.getTime()) ? null : date;
 }
 
 function isSameDay(a, b) {
-  return a.getDate() === b.getDate() &&
-    a.getMonth() === b.getMonth() &&
-    a.getFullYear() === b.getFullYear();
+    return a.getDate() === b.getDate() &&
+        a.getMonth() === b.getMonth() &&
+        a.getFullYear() === b.getFullYear();
 }
 
 function isSameMonth(a, b) {
-  return a.getMonth() === b.getMonth() &&
-    a.getFullYear() === b.getFullYear();
+    return a.getMonth() === b.getMonth() &&
+        a.getFullYear() === b.getFullYear();
 }
 
 function formatCurrency(value) {
-  return `R$ ${Number(value || 0).toFixed(2).replace('.', ',')}`;
+    return `R$ ${Number(value || 0).toFixed(2).replace('.', ',')}`;
 }
 
 function setAuthMessage(message, isError = false) {
-  const element = document.getElementById("authMessage");
-  if (!element) return;
-  element.textContent = message;
-  element.style.color = isError ? "#fca5a5" : "#86efac";
+    const element = document.getElementById("authMessage");
+    if (!element) return;
+    element.textContent = message;
+    element.style.color = isError ? "#fca5a5" : "#86efac";
 }
 
 function showAuthScreen() {
-  document.getElementById("authScreen").classList.remove("hidden");
-  document.getElementById("appScreen").classList.add("hidden");
+    document.getElementById("authScreen").classList.remove("hidden");
+    document.getElementById("appScreen").classList.add("hidden");
 }
 
 function showAppScreen() {
-  document.getElementById("authScreen").classList.add("hidden");
-  document.getElementById("appScreen").classList.remove("hidden");
+    document.getElementById("authScreen").classList.add("hidden");
+    document.getElementById("appScreen").classList.remove("hidden");
 }
 
 function logout() {
-  if (isFirebaseReady()) {
-    firebase.auth().signOut().then(() => {
-      currentUser = null;
-      clientes = [];
-      render();
-      showAuthScreen();
-      setAuthMessage("Você saiu da conta.");
-    });
-  }
+    if (isFirebaseReady()) {
+        firebase.auth().signOut().then(() => {
+            currentUser = null;
+            clientes = [];
+            render();
+            showAuthScreen();
+            setAuthMessage("Você saiu da conta.");
+        });
+    }
 }
 
 function toggleAuthMode(mode) {
-  const loginForm = document.getElementById("loginForm");
-  const registerForm = document.getElementById("registerForm");
-  const loginBtn = document.getElementById("showLoginBtn");
-  const registerBtn = document.getElementById("showRegisterBtn");
+    const loginForm = document.getElementById("loginForm");
+    const registerForm = document.getElementById("registerForm");
+    const loginBtn = document.getElementById("showLoginBtn");
+    const registerBtn = document.getElementById("showRegisterBtn");
 
-  if (mode === "register") {
-    loginForm.classList.add("hidden");
-    registerForm.classList.remove("hidden");
-    loginBtn.classList.remove("active");
-    registerBtn.classList.add("active");
-  } else {
-    loginForm.classList.remove("hidden");
-    registerForm.classList.add("hidden");
-    loginBtn.classList.add("active");
-    registerBtn.classList.remove("active");
-  }
+    if (mode === "register") {
+        loginForm.classList.add("hidden");
+        registerForm.classList.remove("hidden");
+        loginBtn.classList.remove("active");
+        registerBtn.classList.add("active");
+    } else {
+        loginForm.classList.remove("hidden");
+        registerForm.classList.add("hidden");
+        loginBtn.classList.add("active");
+        registerBtn.classList.remove("active");
+    }
 }
 
 function validateEmail(email) {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
 function registerUser(name, email, password, confirmPassword) {
-  if (!name || !email || !password || !confirmPassword) {
-    setAuthMessage("Preencha todos os campos.", true);
-    return;
-  }
-  if (!validateEmail(email)) {
-    setAuthMessage("Informe um e-mail válido.", true);
-    return;
-  }
-  if (password.length < 6) {
-    setAuthMessage("A senha precisa ter pelo menos 6 caracteres.", true);
-    return;
-  }
-  if (password !== confirmPassword) {
-    setAuthMessage("As senhas não coincidem.", true);
-    return;
-  }
+    if (!name || !email || !password || !confirmPassword) {
+        setAuthMessage("Preencha todos os campos.", true);
+        return;
+    }
+    if (!validateEmail(email)) {
+        setAuthMessage("Informe um e-mail válido.", true);
+        return;
+    }
+    if (password.length < 6) {
+        setAuthMessage("A senha precisa ter pelo menos 6 caracteres.", true);
+        return;
+    }
+    if (password !== confirmPassword) {
+        setAuthMessage("As senhas não coincidem.", true);
+        return;
+    }
 
-  if (isFirebaseReady()) {
-    firebase.auth().createUserWithEmailAndPassword(email, password)
-      .then((userCredential) => {
-        return userCredential.user.updateProfile({
-          displayName: name
-        });
-      })
-      .then(() => {
-        setAuthMessage("Conta criada com sucesso!");
-      })
-      .catch((error) => {
-        setAuthMessage("Erro: " + error.message, true);
-      });
-  } else {
-    setAuthMessage("Erro: Configure o Firebase para criar contas.", true);
-  }
+    if (isFirebaseReady()) {
+        firebase.auth().createUserWithEmailAndPassword(email, password)
+            .then((userCredential) => {
+                return userCredential.user.updateProfile({
+                    displayName: name
+                });
+            })
+            .then(() => {
+                setAuthMessage("Conta criada com sucesso!");
+            })
+            .catch((error) => {
+                setAuthMessage("Erro: " + error.message, true);
+            });
+    } else {
+        setAuthMessage("Erro: Configure o Firebase para criar contas.", true);
+    }
 }
 
 function loginUser(email, password) {
-  if (!email || !password) {
-    setAuthMessage("Informe e-mail e senha.", true);
-    return;
-  }
+    if (!email || !password) {
+        setAuthMessage("Informe e-mail e senha.", true);
+        return;
+    }
 
-  if (isFirebaseReady()) {
-    firebase.auth().signInWithEmailAndPassword(email, password)
-      .catch((error) => {
-        setAuthMessage("E-mail ou senha inválidos.", true);
-      });
-  }
+    if (isFirebaseReady()) {
+        firebase.auth().signInWithEmailAndPassword(email, password)
+            .catch((error) => {
+                setAuthMessage("E-mail ou senha inválidos.", true);
+            });
+    }
 }
 
 function getStatusClass(status) {
-  const map = {
-    Pendente: "status-pending",
-    Confirmado: "status-confirmed",
-    Concluído: "status-done"
-  };
-  return map[status] || "";
+    const map = {
+        Pendente: "status-pending",
+        Confirmado: "status-confirmed",
+        Concluído: "status-done"
+    };
+    return map[status] || "";
 }
 
 async function saveClient() {
-  const nome = document.getElementById("nome").value.trim();
-  const tel = normalizePhone(document.getElementById("tel").value);
-  const servico = document.getElementById("servico").value.trim();
-  const barbeiro = document.getElementById("barbeiro").value;
-  const valor = parseFloat(document.getElementById("valor").value) || 0;
-  const horario = document.getElementById("horario").value;
-  const status = document.getElementById("status").value;
+    const nome = document.getElementById("nome").value.trim();
+    const tel = normalizePhone(document.getElementById("tel").value);
+    const servico = document.getElementById("servico").value.trim();
+    const barbeiro = document.getElementById("barbeiro").value;
+    const valor = parseFloat(document.getElementById("valor").value) || 0;
+    const horario = document.getElementById("horario").value;
+    const status = document.getElementById("status").value;
 
-  if (!nome || !tel) return;
+    if (!nome || !tel) return;
 
-  const cliente = {
-    nome,
-    tel,
-    servico,
-    barbeiro,
-    valor,
-    horario,
-    status
-  };
-
-  if (editIndex !== null) {
-    clientes[editIndex] = {
-      ...clientes[editIndex],
-      ...cliente
+    const cliente = {
+        nome,
+        tel,
+        servico,
+        barbeiro,
+        valor,
+        horario,
+        status
     };
-  } else {
-    clientes.push({
-      ...cliente,
-      id: generateId(),
-      userId: currentUser ? currentUser.uid : null
-    });
-  }
 
-  await syncToFirebase();
-  resetForm();
-  render();
+    if (editIndex !== null) {
+        clientes[editIndex] = {
+            ...clientes[editIndex],
+            ...cliente
+        };
+    } else {
+        clientes.push({
+            ...cliente,
+            id: generateId(),
+            userId: currentUser ? currentUser.uid : null
+        });
+    }
+
+    await syncToFirebase();
+    resetForm();
+    render();
 }
 function resetForm() {
-  document.getElementById("clientForm").reset();
-  document.getElementById("status").value = "Pendente";
-  document.getElementById("formTitle").textContent = "➕ Novo Cliente";
-  document.getElementById("saveBtn").textContent = "Salvar cliente";
-  document.getElementById("cancelEditBtn").classList.add("hidden");
-  editIndex = null;
+    document.getElementById("clientForm").reset();
+    document.getElementById("status").value = "Pendente";
+    document.getElementById("formTitle").textContent = "➕ Novo Cliente";
+    document.getElementById("saveBtn").textContent = "Salvar cliente";
+    document.getElementById("cancelEditBtn").classList.add("hidden");
+    editIndex = null;
 }
 
 function editClient(index) {
-  const cliente = clientes[index];
-  if (!cliente) return;
+    const cliente = clientes[index];
+    if (!cliente) return;
 
-  document.getElementById("nome").value = cliente.nome || "";
-  document.getElementById("tel").value = cliente.tel || "";
-  document.getElementById("servico").value = cliente.servico || "";
-  document.getElementById("barbeiro").value = cliente.barbeiro || "";
-  document.getElementById("valor").value = cliente.valor || "";
-  document.getElementById("horario").value = cliente.horario || "";
-  document.getElementById("status").value = cliente.status || "Pendente";
+    document.getElementById("nome").value = cliente.nome || "";
+    document.getElementById("tel").value = cliente.tel || "";
+    document.getElementById("servico").value = cliente.servico || "";
+    document.getElementById("barbeiro").value = cliente.barbeiro || "";
+    document.getElementById("valor").value = cliente.valor || "";
+    document.getElementById("horario").value = cliente.horario || "";
+    document.getElementById("status").value = cliente.status || "Pendente";
 
-  editIndex = index;
-  document.getElementById("formTitle").textContent = "✏️ Editar Cliente";
-  document.getElementById("saveBtn").textContent = "Atualizar cliente";
-  document.getElementById("cancelEditBtn").classList.remove("hidden");
-  document.getElementById("nome").focus();
+    editIndex = index;
+    document.getElementById("formTitle").textContent = "✏️ Editar Cliente";
+    document.getElementById("saveBtn").textContent = "Atualizar cliente";
+    document.getElementById("cancelEditBtn").classList.remove("hidden");
+    document.getElementById("nome").focus();
 }
 
 function cancelEdit() {
-  resetForm();
+    resetForm();
 }
 
 async function concluirAtendimento(index) {
-  const cliente = clientes[index];
-  if (!cliente) return;
+    const cliente = clientes[index];
+    if (!cliente) return;
 
-  clientes[index] = {
-    ...cliente,
-    status: "Concluído"
-  };
+    clientes[index] = {
+        ...cliente,
+        status: "Concluído"
+    };
 
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(clientes));
-  await syncToFirebase();
-  render();
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(clientes));
+    await syncToFirebase();
+    render();
 }
 
 async function deleteClient(index) {
-  const cliente = clientes[index];
-  if (!cliente) return;
+    const cliente = clientes[index];
+    if (!cliente) return;
 
-  const confirmar = confirm(`Excluir ${cliente.nome} da lista?`);
-  if (!confirmar) return;
+    const confirmar = confirm(`Excluir ${cliente.nome} da lista?`);
+    if (!confirmar) return;
 
-  clientes.splice(index, 1);
+    clientes.splice(index, 1);
 
-  if (isFirebaseReady() && cliente.id) {
-    await window.db.collection("clientes").doc(cliente.id).delete();
-  }
+    if (isFirebaseReady() && cliente.id) {
+        await window.db.collection("clientes").doc(cliente.id).delete();
+    }
 
-  render();
+    render();
 }
 
 function focusClientForm() {
-  document.getElementById("nome").focus();
+    document.getElementById("nome").focus();
 }
 function addBarbeiro() {
 
-  const input = document.getElementById("novoBarbeiro");
+    const input = document.getElementById("novoBarbeiro");
 
-  const nome = input.value.trim();
+    const nome = input.value.trim();
 
-  if (!nome) return;
+    if (!nome) return;
 
-  barbeiros.push(nome);
+    barbeiros.push(nome);
 
-  renderBarbeiros();
+    renderBarbeiros();
 
-  input.value = "";
+    input.value = "";
 }
 function renderBarbeiros() {
 
-  const lista = document.getElementById("listaBarbeiros");
+    const lista = document.getElementById("listaBarbeiros");
 
-  const select = document.getElementById("barbeiro");
+    const select = document.getElementById("barbeiro");
 
-  lista.innerHTML = "";
+    lista.innerHTML = "";
 
-  select.innerHTML =
-    '<option value="">Selecione o barbeiro</option>';
+    select.innerHTML =
+        '<option value="">Selecione o barbeiro</option>';
 
-  barbeiros.forEach((barbeiro, index) => {
+    barbeiros.forEach((barbeiro, index) => {
 
-    lista.innerHTML += `
+        lista.innerHTML += `
       <div class="barbeiro-card">
 
         <div class="barbeiro-info">
@@ -373,79 +373,129 @@ function renderBarbeiros() {
       </div>
     `;
 
-    select.innerHTML += `
+        select.innerHTML += `
       <option value="${barbeiro}">
         ${barbeiro}
       </option>
     `;
 
-  });
+    });
 
 }
 function removeBarbeiro(index) {
 
-  barbeiros.splice(index, 1);
+    barbeiros.splice(index, 1);
 
-  renderBarbeiros();
+    renderBarbeiros();
 
 }
 
 function renderDashboard() {
-  const hojeDate = new Date();
-  const hoje = clientes.filter((cliente) => {
-    const data = parseDate(cliente.horario);
-    return data && isSameDay(data, hojeDate);
-  }).length;
 
-  const pendentes = clientes.filter((cliente) => cliente.status !== "Concluído").length;
-  const concluidos = clientes.filter((cliente) => cliente.status === "Concluído").length;
+    const hojeDate = new Date();
 
-  const faturamentoHoje = clientes.reduce((total, cliente) => {
-    const data = parseDate(cliente.horario);
-    if (!data || !isSameDay(data, hojeDate) || cliente.status !== "Concluído") {
-      return total;
-    }
-    return total + (Number(cliente.valor) || 0);
-  }, 0);
+    const hoje = clientes.filter((cliente) => {
+        const data = parseDate(cliente.horario);
+        return data && isSameDay(data, hojeDate);
+    }).length;
 
-  const faturamentoMes = clientes.reduce((total, cliente) => {
-    const data = parseDate(cliente.horario);
-    if (!data || !isSameMonth(data, hojeDate) || cliente.status !== "Concluído") {
-      return total;
-    }
-    return total + (Number(cliente.valor) || 0);
-  }, 0);
+    const pendentes = clientes.filter(
+        (cliente) => cliente.status !== "Concluído"
+    ).length;
 
-  document.getElementById("totalClientes").textContent = clientes.length;
-  document.getElementById("agendamentosHoje").textContent = hoje;
-  document.getElementById("pendentes").textContent = pendentes;
-  document.getElementById("concluidos").textContent = concluidos;
-  document.getElementById("faturamentoHoje").textContent = formatCurrency(faturamentoHoje);
-  document.getElementById("faturamentoMes").textContent = formatCurrency(faturamentoMes);
+    const concluidos = clientes.filter(
+        (cliente) => cliente.status === "Concluído"
+    ).length;
+
+    let faturamentoHoje = 0;
+    let faturamentoMes = 0;
+    let faturamentoSemana = 0;
+    let totalValorConcluido = 0;
+
+    const seteDiasAtras = new Date(hojeDate);
+    seteDiasAtras.setDate(hojeDate.getDate() - 6);
+    seteDiasAtras.setHours(0, 0, 0, 0);
+
+    clientes.forEach((cliente) => {
+
+        if (cliente.status !== "Concluído") return;
+
+        const data = parseDate(cliente.horario);
+
+        if (!data) return;
+
+        const valor = Number(cliente.valor) || 0;
+        totalValorConcluido += valor;
+
+        if (isSameDay(data, hojeDate)) {
+            faturamentoHoje += valor;
+        }
+
+        if (isSameMonth(data, hojeDate)) {
+            faturamentoMes += valor;
+        }
+
+        if (data >= seteDiasAtras && data <= hojeDate) {
+            faturamentoSemana += valor;
+        }
+
+    });
+
+    const ticketMedio =
+        concluidos > 0
+            ? totalValorConcluido / concluidos
+            : 0;
+
+    document.getElementById("totalClientes").textContent =
+        clientes.length;
+
+    document.getElementById("agendamentosHoje").textContent =
+        hoje;
+
+    document.getElementById("pendentes").textContent =
+        pendentes;
+
+    document.getElementById("concluidos").textContent =
+        concluidos;
+
+    document.getElementById("faturamentoHoje").textContent =
+        formatCurrency(faturamentoHoje);
+
+    document.getElementById("faturamentoMes").textContent =
+        formatCurrency(faturamentoMes);
+
+    document.getElementById("faturamentoSemana").textContent =
+        formatCurrency(faturamentoSemana);
+
+    document.getElementById("ticketMedio").textContent =
+        formatCurrency(ticketMedio);
+
 }
 
 function render() {
-  const lista = document.getElementById("lista");
-  const select = document.getElementById("clientes");
+    const lista = document.getElementById("lista");
+    const select = document.getElementById("clientes");
 
-  lista.innerHTML = "";
-  select.innerHTML = "";
+    lista.innerHTML = "";
+    select.innerHTML = "";
 
-  if (!clientes.length) {
-    lista.innerHTML = `
+    if (!clientes.length) {
+        lista.innerHTML = `
       <tr>
         <td colspan="8" class="empty-state">Nenhum cliente cadastrado ainda.</td>
       </tr>
     `;
-    select.innerHTML = `<option value="">Nenhum cliente</option>`;
-    renderDashboard();
-    return;
-  }
+        select.innerHTML = `<option value="">Nenhum cliente</option>`;
+        renderDashboard();
+        renderFinanceiroBarbeiros();
 
-  clientes.forEach((cliente, index) => {
-    const statusClass = getStatusClass(cliente.status || "Pendente");
+        return;
+    }
 
-   lista.innerHTML += `
+    clientes.forEach((cliente, index) => {
+        const statusClass = getStatusClass(cliente.status || "Pendente");
+
+        lista.innerHTML += `
 <tr>
 
 <td>
@@ -508,68 +558,124 @@ Excluir
 
 </tr>
 `;
-    select.innerHTML += `<option value="${index}">${cliente.nome}</option>`;
-  });
+        select.innerHTML += `<option value="${index}">${cliente.nome}</option>`;
+    });
 
-  renderDashboard();
+    renderDashboard();
 }
 
 function sendWhats() {
-  const select = document.getElementById("clientes");
-  const i = select.value;
+    const select = document.getElementById("clientes");
+    const i = select.value;
 
-  if (i === "" || !clientes[i]) {
-    alert("Selecione um cliente antes de enviar a mensagem.");
-    return;
-  }
+    if (i === "" || !clientes[i]) {
+        alert("Selecione um cliente antes de enviar a mensagem.");
+        return;
+    }
 
-  const cliente = clientes[i];
-  const text = document.getElementById("msg").value;
-  const url = `https://wa.me/55${cliente.tel}?text=${encodeURIComponent(text)}`;
+    const cliente = clientes[i];
+    const text = document.getElementById("msg").value;
+    const url = `https://wa.me/55${cliente.tel}?text=${encodeURIComponent(text)}`;
 
-  window.open(url, "_blank");
+    window.open(url, "_blank");
 }
+function renderFinanceiroBarbeiros() {
 
-function bootstrap() {
-  document.getElementById("showLoginBtn").addEventListener("click", () => toggleAuthMode("login"));
-  document.getElementById("showRegisterBtn").addEventListener("click", () => toggleAuthMode("register"));
+    const container =
+        document.getElementById(
+            "financeiroBarbeiros"
+        );
 
-  document.getElementById("loginForm").addEventListener("submit", (event) => {
-    event.preventDefault();
-    loginUser(
-      document.getElementById("loginEmail").value,
-      document.getElementById("loginPassword").value
-    );
-  });
+    if (!container) return;
 
-  document.getElementById("registerForm").addEventListener("submit", (event) => {
-    event.preventDefault();
-    registerUser(
-      document.getElementById("registerName").value,
-      document.getElementById("registerEmail").value,
-      document.getElementById("registerPassword").value,
-      document.getElementById("registerConfirm").value
-    );
-  });
+    let totais = {};
 
-  if (isFirebaseReady()) {
-    firebase.auth().onAuthStateChanged((user) => {
-      if (user) {
-        currentUser = user;
-        document.getElementById("userBadge").textContent = user.displayName || user.email;
-        showAppScreen();
-        loadClientesFromFirebase();
-      } else {
-        currentUser = null;
-        showAuthScreen();
-      }
+    clientes.forEach(cliente => {
+
+        if (
+            cliente.status !== "Concluído"
+        ) return;
+
+        const barbeiro =
+            cliente.barbeiro || "Sem barbeiro";
+
+        if (!totais[barbeiro]) {
+
+            totais[barbeiro] = 0;
+
+        }
+
+        totais[barbeiro] += Number(
+            cliente.valor || 0
+        );
+
     });
-  } else {
-    setAuthMessage("Aviso: Conecte o Firebase para habilitar o login.", true);
-  }
 
-  resetForm();
-  render();
+    container.innerHTML = "";
+
+    Object.entries(totais)
+        .sort((a, b) => b[1] - a[1])
+        .forEach(([nome, total]) => {
+
+            container.innerHTML += `
+
+      <div class="card" style="margin-bottom:10px">
+
+        <strong>
+          👨‍🦱 ${nome}
+        </strong>
+
+        <h3>
+          ${formatCurrency(total)}
+        </h3>
+
+      </div>
+
+      `;
+
+        });
+
+}
+function bootstrap() {
+    document.getElementById("showLoginBtn").addEventListener("click", () => toggleAuthMode("login"));
+    document.getElementById("showRegisterBtn").addEventListener("click", () => toggleAuthMode("register"));
+
+    document.getElementById("loginForm").addEventListener("submit", (event) => {
+        event.preventDefault();
+        loginUser(
+            document.getElementById("loginEmail").value,
+            document.getElementById("loginPassword").value
+        );
+    });
+
+    document.getElementById("registerForm").addEventListener("submit", (event) => {
+        event.preventDefault();
+        registerUser(
+            document.getElementById("registerName").value,
+            document.getElementById("registerEmail").value,
+            document.getElementById("registerPassword").value,
+            document.getElementById("registerConfirm").value
+        );
+    });
+
+    if (isFirebaseReady()) {
+        firebase.auth().onAuthStateChanged((user) => {
+            if (user) {
+                currentUser = user;
+                document.getElementById("userBadge").textContent = user.displayName || user.email;
+                showAppScreen();
+                loadClientesFromFirebase();
+            } else {
+                currentUser = null;
+                showAuthScreen();
+            }
+        });
+    } else {
+        setAuthMessage("Aviso: Conecte o Firebase para habilitar o login.", true);
+    }
+
+    resetForm();
+    render();
 }
 
 bootstrap();
