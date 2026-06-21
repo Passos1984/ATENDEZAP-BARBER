@@ -322,6 +322,10 @@ async function deleteClient(index) {
 }
 
 function focusClientForm() {
+    switchView('agendamentos');
+    document.querySelectorAll('.menu-item').forEach((menu) => {
+        menu.classList.toggle('active', menu.dataset.view === 'agendamentos');
+    });
     document.getElementById("nome").focus();
 }
 function addBarbeiro() {
@@ -683,6 +687,7 @@ function bootstrap() {
                 menu.classList.remove('active');
             });
             item.classList.add('active');
+            switchView(item.dataset.view);
             closeSidebar();
         });
     });
@@ -742,6 +747,19 @@ function closeSidebar() {
     if (sidebar && overlay) {
         sidebar.classList.remove('open');
         overlay.classList.add('hidden');
+    }
+}
+
+function switchView(view) {
+    if (!view) return;
+
+    document.querySelectorAll('.view-section').forEach((section) => {
+        section.classList.add('hidden');
+    });
+
+    const target = document.getElementById(`view-${view}`);
+    if (target) {
+        target.classList.remove('hidden');
     }
 }
 

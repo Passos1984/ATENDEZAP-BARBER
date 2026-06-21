@@ -65,11 +65,11 @@
                 <button class="sidebar-close" id="closeSidebarBtn" aria-label="Fechar menu">✕</button>
             </div>
             <nav>
-                <button class="menu-item active">📊 Dashboard</button>
-                <button class="menu-item">📅 Agendamentos</button>
-                <button class="menu-item">👨‍🦱 Barbeiros</button>
-                <button class="menu-item">💰 Financeiro</button>
-                <button class="menu-item">⚙️ Configurações</button>
+                <button class="menu-item active" data-view="dashboard">📊 Dashboard</button>
+                <button class="menu-item" data-view="agendamentos">📅 Agendamentos</button>
+                <button class="menu-item" data-view="barbeiros">👨‍🦱 Barbeiros</button>
+                <button class="menu-item" data-view="financeiro">💰 Financeiro</button>
+                <button class="menu-item" data-view="configuracoes">⚙️ Configurações</button>
             </nav>
         </aside>
 
@@ -87,6 +87,7 @@
                 </div>
             </header>
 
+            <div class="view-section" id="view-dashboard">
             <section class="dashboard">
                 <div class="stat-card gold">
                     <span>Total</span>
@@ -129,7 +130,9 @@
                     <small>por atendimento</small>
                 </div>
             </section>
+            </div>
 
+            <div class="view-section hidden" id="view-agendamentos">
             <main class="content-grid">
                 <section class="card form-card">
                     <div class="card-header">
@@ -167,24 +170,6 @@ Estamos te esperando na barbearia 👍</textarea>
                 </section>
             </main>
 
-            <section class="card">
-                <div class="card-header">
-                    <h2>👨‍🦱 Gerenciar Barbeiros</h2>
-                </div>
-                <div class="form-actions">
-                    <input type="text" id="novoBarbeiro" placeholder="Nome do barbeiro">
-                    <button class="btn btn-primary" onclick="addBarbeiro()">Adicionar</button>
-                </div>
-                <div id="listaBarbeiros"></div>
-            </section>
-
-            <section class="card">
-                <div class="card-header">
-                    <h2>💰 Financeiro por Barbeiro</h2>
-                </div>
-                <div id="financeiroBarbeiros"></div>
-            </section>
-
             <section class="card table-card">
                 <div class="card-header">
                     <h2>📋 Agendamentos</h2>
@@ -207,6 +192,38 @@ Estamos te esperando na barbearia 👍</textarea>
                     </table>
                 </div>
             </section>
+            </div>
+
+            <div class="view-section hidden" id="view-barbeiros">
+            <section class="card">
+                <div class="card-header">
+                    <h2>👨‍🦱 Gerenciar Barbeiros</h2>
+                </div>
+                <div class="form-actions">
+                    <input type="text" id="novoBarbeiro" placeholder="Nome do barbeiro">
+                    <button class="btn btn-primary" onclick="addBarbeiro()">Adicionar</button>
+                </div>
+                <div id="listaBarbeiros"></div>
+            </section>
+            </div>
+
+            <div class="view-section hidden" id="view-financeiro">
+            <section class="card">
+                <div class="card-header">
+                    <h2>💰 Financeiro por Barbeiro</h2>
+                </div>
+                <div id="financeiroBarbeiros"></div>
+            </section>
+            </div>
+
+            <div class="view-section hidden" id="view-configuracoes">
+            <section class="card">
+                <div class="card-header">
+                    <h2>⚙️ Configurações</h2>
+                </div>
+                <p style="color:#94a3b8">Em breve: preferências da barbearia, horário de funcionamento e outras configurações.</p>
+            </section>
+            </div>
         </main>
     </div>
 
