@@ -54,236 +54,160 @@
         </div>
     </section>
 
-    <div id="appScreen" class="app-shell hidden">
+    <div id="appScreen" class="app-layout hidden">
+        <div class="sidebar-overlay hidden" id="sidebarOverlay"></div>
 
-        <header class="topbar">
-
-            <div>
-                <p class="eyebrow">Barbearia</p>
-                <h1>💈 AtendeZap Barber Premium</h1>
-            </div>
-
-            <div class="topbar-actions">
-                <span id="userBadge" class="user-badge"></span>
-
-                <button class="btn btn-secondary" onclick="logout()">
-                    Sair
-                </button>
-
-                <button class="btn btn-primary" onclick="focusClientForm()">
-                    + Novo Agendamento
-                </button>
-            </div>
-
-        </header>
-
-        <!-- DASHBOARD -->
-
-        <section class="dashboard">
-
-            <div class="stat-card gold">
-                <span>Total</span>
-                <strong id="totalClientes">0</strong>
-                <small>clientes cadastrados</small>
-            </div>
-
-            <div class="stat-card blue">
-                <span>Hoje</span>
-                <strong id="agendamentosHoje">0</strong>
-                <small>agendamentos hoje</small>
-            </div>
-
-            <div class="stat-card orange">
-                <span>Pendentes</span>
-                <strong id="pendentes">0</strong>
-                <small>aguardando</small>
-            </div>
-
-            <div class="stat-card green">
-                <span>Concluídos</span>
-                <strong id="concluidos">0</strong>
-                <small>realizados</small>
-            </div>
-
-            <div class="stat-card money">
-                <span>Faturamento Hoje</span>
-                <strong id="faturamentoHoje">R$ 0,00</strong>
-                <small>dia atual</small>
-            </div>
-
-            <div class="stat-card money">
-                <span>Faturamento Mês</span>
-                <strong id="faturamentoMes">R$ 0,00</strong>
-                <small>mês atual</small>
-            </div>
-            <div class="stat-card money">
-                <span>Faturamento Semana</span>
-                <strong id="faturamentoSemana">R$ 0,00</strong>
-                <small>últimos 7 dias</small>
-            </div>
-
-            <div class="stat-card blue">
-                <span>Ticket Médio</span>
-                <strong id="ticketMedio">R$ 0,00</strong>
-                <small>por atendimento</small>
-            </div>
-        </section>
-
-        <!-- FORMULÁRIO -->
-
-        <main class="content-grid">
-
-            <section class="card form-card">
-
-                <div class="card-header">
-                    <h2 id="formTitle">➕ Novo Agendamento</h2>
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-top">
+                <div class="logo-area">
+                    <h2>💈 AtendeZap</h2>
                 </div>
+                <button class="sidebar-close" id="closeSidebarBtn" aria-label="Fechar menu">✕</button>
+            </div>
+            <nav>
+                <button class="menu-item active">📊 Dashboard</button>
+                <button class="menu-item">📅 Agendamentos</button>
+                <button class="menu-item">👨‍🦱 Barbeiros</button>
+                <button class="menu-item">💰 Financeiro</button>
+                <button class="menu-item">⚙️ Configurações</button>
+            </nav>
+        </aside>
 
-                <form id="clientForm" onsubmit="event.preventDefault(); saveClient();">
+        <main class="main-content">
+            <header class="topbar">
+                <button class="menu-toggle" onclick="toggleMenu()">☰</button>
+                <div>
+                    <p class="eyebrow">Barbearia</p>
+                    <h1>AtendeZap Barber</h1>
+                </div>
+                <div class="topbar-actions">
+                    <span id="userBadge" class="user-badge"></span>
+                    <button class="btn btn-secondary" onclick="logout()">Sair</button>
+                    <button class="btn btn-primary" onclick="focusClientForm()">+ Novo Agendamento</button>
+                </div>
+            </header>
 
-                    <input type="text" id="nome" placeholder="Nome do cliente" required>
+            <section class="dashboard">
+                <div class="stat-card gold">
+                    <span>Total</span>
+                    <strong id="totalClientes">0</strong>
+                    <small>clientes cadastrados</small>
+                </div>
+                <div class="stat-card blue">
+                    <span>Hoje</span>
+                    <strong id="agendamentosHoje">0</strong>
+                    <small>agendamentos hoje</small>
+                </div>
+                <div class="stat-card orange">
+                    <span>Pendentes</span>
+                    <strong id="pendentes">0</strong>
+                    <small>aguardando</small>
+                </div>
+                <div class="stat-card green">
+                    <span>Concluídos</span>
+                    <strong id="concluidos">0</strong>
+                    <small>realizados</small>
+                </div>
+                <div class="stat-card money">
+                    <span>Faturamento Hoje</span>
+                    <strong id="faturamentoHoje">R$ 0,00</strong>
+                    <small>dia atual</small>
+                </div>
+                <div class="stat-card money">
+                    <span>Faturamento Mês</span>
+                    <strong id="faturamentoMes">R$ 0,00</strong>
+                    <small>mês atual</small>
+                </div>
+                <div class="stat-card money">
+                    <span>Faturamento Semana</span>
+                    <strong id="faturamentoSemana">R$ 0,00</strong>
+                    <small>últimos 7 dias</small>
+                </div>
+                <div class="stat-card blue">
+                    <span>Ticket Médio</span>
+                    <strong id="ticketMedio">R$ 0,00</strong>
+                    <small>por atendimento</small>
+                </div>
+            </section>
 
-                    <input type="tel" id="tel" placeholder="WhatsApp" required>
-
-                    <input type="text" id="servico" placeholder="Serviço">
-
-                    <select id="barbeiro">
-
-                        <option value="">
-                            Selecione o barbeiro
-                        </option>
-
-                    </select>
-
-                    <input type="number" id="valor" placeholder="Valor do serviço" step="0.01">
-
-                    <input type="datetime-local" id="horario">
-
-                    <select id="status">
-
-                        <option value="Pendente">
-                            Pendente
-                        </option>
-
-                        <option value="Confirmado">
-                            Confirmado
-                        </option>
-
-                        <option value="Concluído">
-                            Concluído
-                        </option>
-
-                    </select>
-
-                    <div class="form-actions">
-
-                        <button type="submit" class="btn btn-primary" id="saveBtn">
-                            Salvar
-                        </button>
-
-                        <button type="button" class="btn btn-secondary hidden" id="cancelEditBtn"
-                            onclick="cancelEdit()">
-                            Cancelar
-                        </button>
-
+            <main class="content-grid">
+                <section class="card form-card">
+                    <div class="card-header">
+                        <h2 id="formTitle">➕ Novo Agendamento</h2>
                     </div>
+                    <form id="clientForm" onsubmit="event.preventDefault(); saveClient();">
+                        <input type="text" id="nome" placeholder="Nome do cliente" required>
+                        <input type="tel" id="tel" placeholder="WhatsApp" required>
+                        <input type="text" id="servico" placeholder="Serviço">
+                        <select id="barbeiro">
+                            <option value="">Selecione o barbeiro</option>
+                        </select>
+                        <input type="number" id="valor" placeholder="Valor do serviço" step="0.01">
+                        <input type="datetime-local" id="horario">
+                        <select id="status">
+                            <option value="Pendente">Pendente</option>
+                            <option value="Confirmado">Confirmado</option>
+                            <option value="Concluído">Concluído</option>
+                        </select>
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary" id="saveBtn">Salvar</button>
+                            <button type="button" class="btn btn-secondary hidden" id="cancelEditBtn" onclick="cancelEdit()">Cancelar</button>
+                        </div>
+                    </form>
+                </section>
 
-                </form>
+                <section class="card message-card">
+                    <div class="card-header">
+                        <h2>💬 Mensagem rápida</h2>
+                    </div>
+                    <select id="clientes"></select>
+                    <textarea id="msg">Olá! Seu horário está confirmado 💈
+Estamos te esperando na barbearia 👍</textarea>
+                    <button class="btn btn-primary" onclick="sendWhats()">Enviar WhatsApp</button>
+                </section>
+            </main>
 
-            </section>
-
-            <!-- WHATSAPP -->
-
-            <section class="card message-card">
-
+            <section class="card">
                 <div class="card-header">
-                    <h2>💬 Mensagem rápida</h2>
+                    <h2>👨‍🦱 Gerenciar Barbeiros</h2>
                 </div>
-
-                <select id="clientes"></select>
-
-                <textarea id="msg">
-Olá! Seu horário está confirmado 💈
-Estamos te esperando na barbearia 👍
-                </textarea>
-
-                <button class="btn btn-primary" onclick="sendWhats()">
-                    Enviar WhatsApp
-                </button>
-
+                <div class="form-actions">
+                    <input type="text" id="novoBarbeiro" placeholder="Nome do barbeiro">
+                    <button class="btn btn-primary" onclick="addBarbeiro()">Adicionar</button>
+                </div>
+                <div id="listaBarbeiros"></div>
             </section>
 
+            <section class="card">
+                <div class="card-header">
+                    <h2>💰 Financeiro por Barbeiro</h2>
+                </div>
+                <div id="financeiroBarbeiros"></div>
+            </section>
+
+            <section class="card table-card">
+                <div class="card-header">
+                    <h2>📋 Agendamentos</h2>
+                </div>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Cliente</th>
+                                <th>WhatsApp</th>
+                                <th>Serviço</th>
+                                <th>Barbeiro</th>
+                                <th>Valor</th>
+                                <th>Horário</th>
+                                <th>Status</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="lista"></tbody>
+                    </table>
+                </div>
+            </section>
         </main>
-
-        <!-- BARBEIROS -->
-
-        <section class="card">
-
-            <div class="card-header">
-                <h2>👨‍🦱 Gerenciar Barbeiros</h2>
-            </div>
-
-            <div class="form-actions">
-
-                <input type="text" id="novoBarbeiro" placeholder="Nome do barbeiro">
-
-                <button class="btn btn-primary" onclick="addBarbeiro()">
-                    Adicionar
-                </button>
-
-            </div>
-
-            <div id="listaBarbeiros"></div>
-
-        </section>
-
-        <!-- TABELA -->
-        <section class="card">
-
-            <div class="card-header">
-                <h2>💰 Financeiro por Barbeiro</h2>
-            </div>
-
-            <div id="financeiroBarbeiros">
-
-            </div>
-
-        </section>
-        <section class="card table-card">
-
-            <div class="card-header">
-                <h2>📋 Agendamentos</h2>
-            </div>
-
-            <div class="table-wrap">
-
-                <table>
-
-                    <thead>
-
-                        <tr>
-
-                            <th>Cliente</th>
-                            <th>WhatsApp</th>
-                            <th>Serviço</th>
-                            <th>Barbeiro</th>
-                            <th>Valor</th>
-                            <th>Horário</th>
-                            <th>Status</th>
-                            <th>Ações</th>
-
-                        </tr>
-
-                    </thead>
-
-                    <tbody id="lista"></tbody>
-
-                </table>
-
-            </div>
-
-        </section>
-
     </div>
 
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>

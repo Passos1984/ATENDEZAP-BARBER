@@ -262,8 +262,8 @@ async function saveClient() {
 function resetForm() {
     document.getElementById("clientForm").reset();
     document.getElementById("status").value = "Pendente";
-    document.getElementById("formTitle").textContent = "➕ Novo Cliente";
-    document.getElementById("saveBtn").textContent = "Salvar cliente";
+    document.getElementById("formTitle").textContent = "➕ Novo Agendamento";
+    document.getElementById("saveBtn").textContent = "Salvar";
     document.getElementById("cancelEditBtn").classList.add("hidden");
     editIndex = null;
 }
@@ -281,8 +281,8 @@ function editClient(index) {
     document.getElementById("status").value = cliente.status || "Pendente";
 
     editIndex = index;
-    document.getElementById("formTitle").textContent = "✏️ Editar Cliente";
-    document.getElementById("saveBtn").textContent = "Atualizar cliente";
+    document.getElementById("formTitle").textContent = "✏️ Editar Agendamento";
+    document.getElementById("saveBtn").textContent = "Atualizar";
     document.getElementById("cancelEditBtn").classList.remove("hidden");
     document.getElementById("nome").focus();
 }
@@ -488,7 +488,6 @@ function render() {
         select.innerHTML = `<option value="">Nenhum cliente</option>`;
         renderDashboard();
         renderFinanceiroBarbeiros();
-
         return;
     }
 
@@ -562,6 +561,7 @@ Excluir
     });
 
     renderDashboard();
+    renderFinanceiroBarbeiros();
 }
 
 function sendWhats() {
@@ -613,6 +613,13 @@ function renderFinanceiroBarbeiros() {
 
     container.innerHTML = "";
 
+    if (!Object.keys(totais).length) {
+        container.innerHTML = `
+            <div class="empty-state">Nenhum atendimento concluído ainda.</div>
+        `;
+        return;
+    }
+
     Object.entries(totais)
         .sort((a, b) => b[1] - a[1])
         .forEach(([nome, total]) => {
@@ -637,6 +644,10 @@ function renderFinanceiroBarbeiros() {
 
 }
 function bootstrap() {
+    const overlay = document.getElementById('sidebarOverlay');
+    const closeSidebarBtn = document.getElementById('closeSidebarBtn');
+    const mainContent = document.querySelector('.main-content');
+
     document.getElementById("showLoginBtn").addEventListener("click", () => toggleAuthMode("login"));
     document.getElementById("showRegisterBtn").addEventListener("click", () => toggleAuthMode("register"));
 
@@ -658,6 +669,43 @@ function bootstrap() {
         );
     });
 
+    if (overlay) {
+        overlay.addEventListener('click', closeSidebar);
+    }
+
+    if (closeSidebarBtn) {
+        closeSidebarBtn.addEventListener('click', closeSidebar);
+    }
+
+    document.querySelectorAll('.menu-item').forEach((item) => {
+        item.addEventListener('click', () => {
+            document.querySelectorAll('.menu-item').forEach((menu) => {
+                menu.classList.remove('active');
+            });
+            item.classList.add('active');
+            closeSidebar();
+        });
+    });
+
+    if (mainContent) {
+        mainContent.addEventListener('click', (event) => {
+            const target = event.target;
+            const isMenuToggle = target.closest && target.closest('.menu-toggle');
+            const isSidebar = target.closest && target.closest('.sidebar');
+            const isOverlay = target.closest && target.closest('#sidebarOverlay');
+
+            if (window.innerWidth <= 768 && !isMenuToggle && !isSidebar && !isOverlay) {
+                closeSidebar();
+            }
+        });
+    }
+
+    window.addEventListener('resize', () => {
+        if (window.innerWidth > 768) {
+            closeSidebar();
+        }
+    });
+
     if (isFirebaseReady()) {
         firebase.auth().onAuthStateChanged((user) => {
             if (user) {
@@ -677,5 +725,35 @@ function bootstrap() {
     resetForm();
     render();
 }
+function openSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('sidebarOverlay');
 
+    if (sidebar && overlay) {
+        sidebar.classList.add('open');
+        overlay.classList.remove('hidden');
+    }
+}
+
+function closeSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('sidebarOverlay');
+
+    if (sidebar && overlay) {
+        sidebar.classList.remove('open');
+        overlay.classList.add('hidden');
+    }
+}
+
+function toggleMenu() {
+    const sidebar = document.getElementById('sidebar');
+
+    if (!sidebar) return;
+
+    if (sidebar.classList.contains('open')) {
+        closeSidebar();
+    } else {
+        openSidebar();
+    }
+}
 bootstrap();
