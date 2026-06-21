@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AtendeZap Barber — Sistema completo para barbearia</title>
+<meta name="description" content="Agenda, financeiro e WhatsApp em um só lugar. Escolha o plano do tamanho da sua barbearia.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0d13;
+    --panel: #11151f;
+    --panel-2: #161b27;
+    --line: #232938;
+    --gold: #f0b429;
+    --gold-soft: #f8c94a;
+    --crimson: #c1272d;
+    --text: #eef1f6;
+    --muted: #8d96a8;
+    --display: 'Big Shoulders Display', sans-serif;
+    --body: 'Inter', sans-serif;
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--body);
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  img, svg { display: block; max-width: 100%; }
+  a { color: inherit; }
+
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 0 24px; }
+
+  .eyebrow {
+    font-family: var(--display);
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--gold);
+    font-size: 0.82rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .eyebrow::before {
+    content: "";
+    width: 22px;
+    height: 3px;
+    background: var(--crimson);
+    display: inline-block;
+  }
+
+  h1, h2, h3 {
+    font-family: var(--display);
+    font-weight: 700;
+    letter-spacing: 0.01em;
+    margin: 0;
+  }
+
+  /* ---------- pole stripe signature element ---------- */
+  .pole-rail {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 14px;
+    background: repeating-linear-gradient(
+      135deg,
+      var(--crimson) 0 16px,
+      var(--text) 16px 32px,
+      var(--gold) 32px 48px
+    );
+    background-size: 100% 240px;
+    animation: pole-scroll 9s linear infinite;
+    opacity: 0.9;
+  }
+  @keyframes pole-scroll {
+    from { background-position: 0 0; }
+    to { background-position: 0 240px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .pole-rail { animation: none; }
+  }
+
+  /* ---------- nav ---------- */
+  header.site {
+    position: sticky; top: 0; z-index: 50;
+    background: rgba(10,13,19,0.86);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--line);
+  }
+  .nav {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px 0;
+  }
+  .brand {
+    font-family: var(--display);
+    font-size: 1.3rem;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+  }
+  .brand span { color: var(--gold); }
+  .nav-links { display: flex; gap: 28px; align-items: center; }
+  .nav-links a {
+    text-decoration: none; color: var(--muted);
+    font-size: 0.92rem; font-weight: 500;
+    transition: color .2s;
+  }
+  .nav-links a:hover { color: var(--text); }
+  .btn {
+    font-family: var(--body);
+    font-weight: 600;
+    font-size: 0.92rem;
+    padding: 11px 20px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: transform .15s, box-shadow .15s, background .15s;
+  }
+  .btn-primary { background: var(--gold); color: #14110a; }
+  .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 8px 20px rgba(240,180,41,0.25); }
+  .btn-ghost { background: transparent; color: var(--text); border: 1px solid var(--line); }
+  .btn-ghost:hover { border-color: var(--gold); color: var(--gold); }
+  .btn-block { width: 100%; justify-content: center; }
+
+  /* ---------- hero ---------- */
+  .hero {
+    position: relative;
+    padding: 96px 0 80px;
+    overflow: hidden;
+    border-bottom: 1px solid var(--line);
+  }
+  .hero::before {
+    content: "";
+    position: absolute; right: -120px; top: -160px;
+    width: 480px; height: 480px;
+    background: radial-gradient(circle, rgba(240,180,41,0.10), transparent 70%);
+  }
+  .hero-grid {
+    display: grid;
+    grid-template-columns: 1.1fr 0.9fr;
+    gap: 56px;
+    align-items: center;
+    position: relative;
+  }
+  .hero h1 {
+    font-size: clamp(2.4rem, 5vw, 4rem);
+    line-height: 0.98;
+    text-transform: uppercase;
+    margin: 18px 0 22px;
+  }
+  .hero h1 em {
+    font-style: normal;
+    color: var(--gold);
+  }
+  .hero p.lead {
+    color: var(--muted);
+    font-size: 1.08rem;
+    max-width: 480px;
+    margin-bottom: 32px;
+  }
+  .hero-ctas { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 28px; }
+  .hero-meta { display: flex; gap: 24px; color: var(--muted); font-size: 0.86rem; flex-wrap: wrap; }
+  .hero-meta strong { color: var(--text); }
+
+  .hero-visual {
+    position: relative;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    padding: 28px;
+    overflow: hidden;
+  }
+  .hero-visual .pole-rail { left: 0; width: 10px; border-radius: 18px 0 0 18px; }
+  .ticket-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 14px 12px 14px 22px;
+    border-bottom: 1px dashed var(--line);
+    font-size: 0.92rem;
+  }
+  .ticket-row:last-child { border-bottom: none; }
+  .ticket-row .pill {
+    font-size: 0.74rem; font-weight: 700; letter-spacing: 0.04em;
+    padding: 4px 10px; border-radius: 999px;
+    background: rgba(52,211,153,0.14); color: #6ee7a7;
+  }
+  .ticket-row .pill.pending { background: rgba(240,180,41,0.16); color: var(--gold-soft); }
+  .hero-visual h3 {
+    font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.12em;
+    color: var(--muted); padding: 0 12px 14px 22px; font-family: var(--body); font-weight: 700;
+  }
+
+  /* ---------- sections shared ---------- */
+  section { padding: 84px 0; }
+  .section-head { max-width: 620px; margin-bottom: 48px; }
+  .section-head h2 {
+    font-size: clamp(1.9rem, 3.4vw, 2.6rem);
+    text-transform: uppercase;
+    margin-top: 14px;
+  }
+  .section-head p { color: var(--muted); margin-top: 14px; font-size: 1.02rem; }
+
+  /* ---------- features ---------- */
+  .features { border-bottom: 1px solid var(--line); background: var(--panel); }
+  .feature-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1px;
+    background: var(--line);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    overflow: hidden;
+  }
+  .feature-card {
+    background: var(--panel);
+    padding: 28px 24px;
+  }
+  .feature-card .ico {
+    font-size: 1.6rem; margin-bottom: 14px; display: block;
+  }
+  .feature-card h3 {
+    font-family: var(--body); font-size: 1.02rem; font-weight: 700;
+    text-transform: none; margin-bottom: 8px;
+  }
+  .feature-card p { color: var(--muted); font-size: 0.92rem; margin: 0; }
+
+  /* ---------- pricing ---------- */
+  .pricing-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 22px;
+  }
+  .plan {
+    position: relative;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 32px 26px;
+    display: flex;
+    flex-direction: column;
+  }
+  .plan.featured {
+    border-color: var(--gold);
+    background: linear-gradient(180deg, rgba(240,180,41,0.07), var(--panel) 30%);
+    transform: translateY(-10px);
+  }
+  .plan-flag {
+    position: absolute; top: -13px; right: 24px;
+    background: var(--gold); color: #14110a;
+    font-size: 0.72rem; font-weight: 700; letter-spacing: 0.06em;
+    text-transform: uppercase; padding: 5px 12px; border-radius: 999px;
+  }
+  .plan-num {
+    font-family: var(--display); font-size: 0.85rem; color: var(--crimson);
+    letter-spacing: 0.1em; font-weight: 700;
+  }
+  .plan-name {
+    font-family: var(--display); font-size: 1.6rem; text-transform: uppercase;
+    margin: 6px 0 18px;
+  }
+  .plan-price { display: flex; align-items: baseline; gap: 6px; margin-bottom: 4px; }
+  .plan-price .num { font-family: var(--display); font-size: 2.6rem; }
+  .plan-price .cents { font-size: 1.3rem; color: var(--muted); }
+  .plan-price .period { color: var(--muted); font-size: 0.9rem; }
+  .plan-chairs {
+    color: var(--gold-soft); font-weight: 600; font-size: 0.92rem;
+    margin: 4px 0;
+  }
+  .plan-trial {
+    color: var(--muted); font-size: 0.84rem;
+    margin: 0 0 22px;
+  }
+  .plan-list { list-style: none; margin: 0 0 26px; padding: 0; display: flex; flex-direction: column; gap: 11px; flex: 1; }
+  .plan-list li { display: flex; gap: 10px; font-size: 0.92rem; color: var(--text); }
+  .plan-list li::before { content: "✓"; color: var(--gold); font-weight: 700; flex-shrink: 0; }
+  .plan-list li.muted { color: var(--muted); }
+  .plan-list li.muted::before { content: "—"; color: var(--muted); }
+
+  /* ---------- how it works ---------- */
+  .steps { background: var(--panel); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+  .step-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px; }
+  .step {
+    border-left: 3px solid var(--crimson);
+    padding-left: 20px;
+  }
+  .step .step-num {
+    font-family: var(--display); font-size: 2.4rem; color: var(--line);
+    -webkit-text-stroke: 1px var(--gold); color: transparent;
+    line-height: 1;
+  }
+  .step h3 { font-family: var(--body); font-size: 1.05rem; margin: 10px 0 8px; }
+  .step p { color: var(--muted); font-size: 0.92rem; margin: 0; }
+
+  /* ---------- faq ---------- */
+  .faq-item {
+    border-bottom: 1px solid var(--line);
+    padding: 20px 0;
+  }
+  .faq-q {
+    display: flex; justify-content: space-between; align-items: center;
+    cursor: pointer; font-weight: 600; font-size: 1rem;
+  }
+  .faq-q .sign { color: var(--gold); font-family: var(--display); font-size: 1.3rem; transition: transform .2s; }
+  .faq-item.open .sign { transform: rotate(45deg); }
+  .faq-a {
+    max-height: 0; overflow: hidden; color: var(--muted); font-size: 0.94rem;
+    transition: max-height .25s ease;
+  }
+  .faq-item.open .faq-a { max-height: 200px; padding-top: 12px; }
+
+  /* ---------- final cta ---------- */
+  .final-cta {
+    text-align: center;
+    background: var(--panel-2);
+    border-top: 1px solid var(--line);
+  }
+  .final-cta h2 { font-size: clamp(2rem, 4vw, 2.8rem); text-transform: uppercase; margin-bottom: 16px; }
+  .final-cta p { color: var(--muted); margin-bottom: 30px; }
+
+  footer {
+    border-top: 1px solid var(--line);
+    padding: 32px 0;
+    color: var(--muted);
+    font-size: 0.85rem;
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  @media (max-width: 920px) {
+    .hero-grid { grid-template-columns: 1fr; }
+    .feature-grid { grid-template-columns: repeat(2, 1fr); }
+    .pricing-grid { grid-template-columns: 1fr; }
+    .plan.featured { transform: none; }
+    .step-row { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<header class="site">
+  <div class="wrap nav">
+    <div class="brand">💈 Atende<span>Zap</span></div>
+    <nav class="nav-links">
+      <a href="#planos">Planos</a>
+      <a href="#como-funciona">Como funciona</a>
+      <a href="#faq">Dúvidas</a>
+    </nav>
+    <a href="index.html" class="btn btn-primary">Entrar</a>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="wrap hero-grid">
+    <div>
+      <span class="eyebrow">Sistema para barbearia</span>
+      <h1>Sua barbearia<br>organizada da <em>cadeira</em><br>ao caixa</h1>
+      <p class="lead">Agenda, financeiro e confirmação por WhatsApp em um só painel. Cadastre seus barbeiros, controle o faturamento e pare de perder horário por falta de organização.</p>
+      <div class="hero-ctas">
+        <a href="#planos" class="btn btn-primary">Começar grátis por 7 dias</a>
+        <a href="index.html" class="btn btn-ghost">Já sou cliente →</a>
+      </div>
+      <div class="hero-meta">
+        <span><strong>7 dias grátis</strong> em qualquer plano</span>
+        <span><strong>WhatsApp</strong> direto da agenda</span>
+        <span><strong>Sem fidelidade</strong></span>
+      </div>
+    </div>
+
+    <div class="hero-visual">
+      <div class="pole-rail"></div>
+      <h3>Agenda de hoje</h3>
+      <div class="ticket-row">
+        <span>Lucas Andrade — Corte + Barba</span>
+        <span class="pill">Confirmado</span>
+      </div>
+      <div class="ticket-row">
+        <span>Pedro Henrique — Degradê</span>
+        <span class="pill pending">Pendente</span>
+      </div>
+      <div class="ticket-row">
+        <span>Rafael Souza — Barba</span>
+        <span class="pill">Confirmado</span>
+      </div>
+      <div class="ticket-row">
+        <span>Diego Martins — Corte social</span>
+        <span class="pill pending">Pendente</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="features">
+  <div class="wrap">
+    <div class="feature-grid">
+      <div class="feature-card">
+        <span class="ico">📅</span>
+        <h3>Agenda completa</h3>
+        <p>Cadastre, edite e acompanhe cada agendamento com status em tempo real.</p>
+      </div>
+      <div class="feature-card">
+        <span class="ico">👨‍🦱</span>
+        <h3>Gestão de barbeiros</h3>
+        <p>Cada barbeiro com sua agenda e seu faturamento separado.</p>
+      </div>
+      <div class="feature-card">
+        <span class="ico">💰</span>
+        <h3>Financeiro automático</h3>
+        <p>Faturamento do dia, da semana, do mês e ticket médio sem planilha.</p>
+      </div>
+      <div class="feature-card">
+        <span class="ico">💬</span>
+        <h3>WhatsApp integrado</h3>
+        <p>Confirme horário com um clique, direto pelo número do cliente.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="planos">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="eyebrow">Planos</span>
+      <h2>Quanto maior a equipe, mais cadeiras liberadas</h2>
+      <p>Os recursos são os mesmos em todos os planos — o que muda é quantos barbeiros você pode cadastrar ao mesmo tempo. Assine qualquer plano e use de graça pelos primeiros <strong style="color:var(--gold-soft)">7 dias</strong>. Troque quando quiser, sem fidelidade.</p>
+    </div>
+
+    <div class="pricing-grid">
+
+      <div class="plan">
+        <span class="plan-num">PLANO 01</span>
+        <h3 class="plan-name">Essencial</h3>
+        <div class="plan-price">
+          <span class="num">R$ 49</span><span class="cents">,90</span><span class="period">/mês</span>
+        </div>
+        <p class="plan-chairs">🪒 Até 2 barbeiros</p>
+        <p class="plan-trial">🎁 7 dias grátis para testar</p>
+        <ul class="plan-list">
+          <li>Agenda de atendimentos completa</li>
+          <li>Dashboard com faturamento</li>
+          <li>Mensagem rápida via WhatsApp</li>
+          <li>Histórico de clientes</li>
+          <li class="muted">Financeiro por barbeiro</li>
+        </ul>
+        <a href="index.html" class="btn btn-ghost btn-block">Testar Essencial grátis</a>
+      </div>
+
+      <div class="plan featured">
+        <span class="plan-flag">Mais escolhido</span>
+        <span class="plan-num">PLANO 02</span>
+        <h3 class="plan-name">Profissional</h3>
+        <div class="plan-price">
+          <span class="num">R$ 99</span><span class="cents">,90</span><span class="period">/mês</span>
+        </div>
+        <p class="plan-chairs">🪒 Até 4 barbeiros</p>
+        <p class="plan-trial">🎁 7 dias grátis para testar</p>
+        <ul class="plan-list">
+          <li>Tudo do plano Essencial</li>
+          <li>Financeiro detalhado por barbeiro</li>
+          <li>Comparativo de faturamento da equipe</li>
+          <li>Suporte prioritário</li>
+        </ul>
+        <a href="index.html" class="btn btn-primary btn-block">Testar Profissional grátis</a>
+      </div>
+
+      <div class="plan">
+        <span class="plan-num">PLANO 03</span>
+        <h3 class="plan-name">Premium</h3>
+        <div class="plan-price">
+          <span class="num">R$ 169</span><span class="cents">,90</span><span class="period">/mês</span>
+        </div>
+        <p class="plan-chairs">🪒 Barbeiros ilimitados</p>
+        <p class="plan-trial">🎁 7 dias grátis para testar</p>
+        <ul class="plan-list">
+          <li>Tudo do plano Profissional</li>
+          <li>Cadastro ilimitado de barbeiros</li>
+          <li>Ideal para redes e franquias</li>
+          <li>Suporte dedicado</li>
+        </ul>
+        <a href="index.html" class="btn btn-ghost btn-block">Testar Premium grátis</a>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<section class="steps" id="como-funciona">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="eyebrow">Como funciona</span>
+      <h2>Três passos até a primeira agenda cheia</h2>
+    </div>
+    <div class="step-row">
+      <div class="step">
+        <span class="step-num">01</span>
+        <h3>Crie sua conta</h3>
+        <p>Cadastre sua barbearia, escolha o plano e use grátis pelos primeiros 7 dias.</p>
+      </div>
+      <div class="step">
+        <span class="step-num">02</span>
+        <h3>Cadastre seus barbeiros</h3>
+        <p>Adicione cada profissional. Se precisar de mais cadeiras do que o seu plano permite, faça upgrade em um clique.</p>
+      </div>
+      <div class="step">
+        <span class="step-num">03</span>
+        <h3>Comece a agendar</h3>
+        <p>Registre os horários, acompanhe o financeiro e confirme cada cliente direto pelo WhatsApp.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="faq">
+  <div class="wrap" style="max-width: 760px;">
+    <div class="section-head">
+      <span class="eyebrow">Dúvidas</span>
+      <h2>Perguntas frequentes</h2>
+    </div>
+
+    <div class="faq-list">
+      <div class="faq-item">
+        <div class="faq-q"><span>Como funciona o teste grátis de 7 dias?</span><span class="sign">+</span></div>
+        <div class="faq-a">Ao assinar qualquer um dos 3 planos, você usa o sistema completo de graça pelos primeiros 7 dias. Não é necessário cartão de crédito para começar.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q"><span>Posso trocar de plano depois?</span><span class="sign">+</span></div>
+        <div class="faq-a">Sim. Você pode fazer upgrade a qualquer momento direto pelo painel, em Configurações → Meu Plano.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q"><span>O que acontece se eu tentar cadastrar mais barbeiros do que meu plano permite?</span><span class="sign">+</span></div>
+        <div class="faq-a">O sistema avisa que o limite foi atingido e sugere o upgrade — você não perde nenhum dado, só precisa subir de plano para liberar mais cadeiras.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q"><span>Tem fidelidade ou multa de cancelamento?</span><span class="sign">+</span></div>
+        <div class="faq-a">Não. A cobrança é mensal e você pode cancelar quando quiser.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q"><span>Os recursos mudam entre os planos?</span><span class="sign">+</span></div>
+        <div class="faq-a">As funções de agenda e WhatsApp são iguais em todos os planos. A diferença é o número de barbeiros que você pode cadastrar e o nível de detalhe do financeiro por profissional.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="final-cta">
+  <div class="wrap">
+    <h2>Pronto pra organizar sua barbearia?</h2>
+    <p>Crie sua conta agora e use grátis pelos primeiros 7 dias.</p>
+    <a href="index.html" class="btn btn-primary">Criar minha conta grátis</a>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap" style="display:flex; justify-content:space-between; flex-wrap:wrap; gap:12px; width:100%;">
+    <span>💈 AtendeZap Barber</span>
+    <span>Sistema de gestão para barbearias</span>
+  </div>
+</footer>
+
+<script>
+  document.querySelectorAll('.faq-q').forEach((q) => {
+    q.addEventListener('click', () => {
+      q.parentElement.classList.toggle('open');
+    });
+  });
+</script>
+
+</body>
+</html>

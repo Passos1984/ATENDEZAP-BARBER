@@ -24,6 +24,16 @@ let clientes = [];
 let editIndex = null;
 let currentUser = null;
 let barbeiros = [];
+let planoAtual = 1;
+let trialStart = null;
+
+const DIAS_TRIAL = 7;
+
+const PLANOS = {
+    1: { nome: "Essencial", limite: 2, preco: 49.90 },
+    2: { nome: "Profissional", limite: 4, preco: 99.90 },
+    3: { nome: "Premium", limite: Infinity, preco: 169.90 }
+};
 
 function normalizePhone(value) {
     return (value || "").replace(/\D/g, "");
@@ -41,6 +51,44 @@ function isFirebaseReady() {
 
 function generateId() {
     return `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+}
+
+function diasRestantesTrial() {
+    if (!trialStart) return null;
+
+    const inicio = new Date(trialStart);
+    if (isNaN(inicio.getTime())) return null;
+
+    const fim = new Date(inicio);
+    fim.setDate(fim.getDate() + DIAS_TRIAL);
+
+    const hoje = new Date();
+    const msRestante = fim.setHours(23, 59, 59, 999) - hoje.getTime();
+    const dias = Math.ceil(msRestante / (1000 * 60 * 60 * 24));
+
+    return Math.max(dias, 0);
+}
+
+function renderTrialBadge() {
+    const badge = document.getElementById("trialBadge");
+    if (!badge) return;
+
+    const dias = diasRestantesTrial();
+
+    if (dias === null) {
+        badge.classList.add("hidden");
+        return;
+    }
+
+    badge.classList.remove("hidden");
+
+    if (dias > 0) {
+        badge.textContent = `🎁 ${dias} dia${dias === 1 ? "" : "s"} de teste grátis restante${dias === 1 ? "" : "s"}`;
+        badge.classList.remove("trial-ended");
+    } else {
+        badge.textContent = "Teste grátis encerrado";
+        badge.classList.add("trial-ended");
+    }
 }
 
 async function syncToFirebase() {
@@ -78,6 +126,61 @@ async function loadClientesFromFirebase() {
         render();
     } catch (error) {
         console.error("Erro ao carregar clientes:", error);
+    }
+}
+
+async function loadBarbeariaFromFirebase() {
+    if (!isFirebaseReady() || !currentUser) return;
+
+    try {
+        const ref = window.db.collection("barbearias").doc(currentUser.uid);
+        const doc = await ref.get();
+
+        if (doc.exists) {
+            const data = doc.data();
+            planoAtual = data.plano || 1;
+            barbeiros = data.barbeiros || [];
+            trialStart = data.trialStart || null;
+
+            if (!trialStart) {
+                // Conta antiga sem trial registrado: inicia o teste grátis agora
+                trialStart = new Date().toISOString();
+                await ref.set({ trialStart }, { merge: true });
+            }
+        } else {
+            // Conta antiga sem documento de barbearia: cria um com plano padrão
+            planoAtual = 1;
+            barbeiros = [];
+            trialStart = new Date().toISOString();
+            await ref.set({
+                nome: currentUser.displayName || "",
+                email: currentUser.email || "",
+                plano: planoAtual,
+                barbeiros: barbeiros,
+                trialStart: trialStart
+            });
+        }
+
+        renderBarbeiros();
+        renderPlano();
+        renderTrialBadge();
+    } catch (error) {
+        console.error("Erro ao carregar dados da barbearia:", error);
+    }
+}
+
+async function syncBarbearia() {
+    if (!isFirebaseReady() || !currentUser) return;
+
+    try {
+        await window.db.collection("barbearias").doc(currentUser.uid).set({
+            nome: currentUser.displayName || "",
+            email: currentUser.email || "",
+            plano: planoAtual,
+            barbeiros: barbeiros
+        }, { merge: true });
+    } catch (error) {
+        console.error("Erro ao salvar dados da barbearia:", error);
     }
 }
 
@@ -132,6 +235,9 @@ function logout() {
         firebase.auth().signOut().then(() => {
             currentUser = null;
             clientes = [];
+            barbeiros = [];
+            planoAtual = 1;
+            trialStart = null;
             render();
             showAuthScreen();
             setAuthMessage("Você saiu da conta.");
@@ -185,6 +291,15 @@ function registerUser(name, email, password, confirmPassword) {
             .then((userCredential) => {
                 return userCredential.user.updateProfile({
                     displayName: name
+                }).then(() => userCredential.user);
+            })
+            .then((user) => {
+                return window.db.collection("barbearias").doc(user.uid).set({
+                    nome: name,
+                    email: email,
+                    plano: 1,
+                    barbeiros: [],
+                    trialStart: new Date().toISOString()
                 });
             })
             .then(() => {
@@ -328,7 +443,7 @@ function focusClientForm() {
     });
     document.getElementById("nome").focus();
 }
-function addBarbeiro() {
+async function addBarbeiro() {
 
     const input = document.getElementById("novoBarbeiro");
 
@@ -336,8 +451,16 @@ function addBarbeiro() {
 
     if (!nome) return;
 
+    const limite = PLANOS[planoAtual].limite;
+
+    if (barbeiros.length >= limite) {
+        alert(`Seu plano (${PLANOS[planoAtual].nome}) permite no máximo ${limite} barbeiro(s). Faça upgrade para cadastrar mais.`);
+        return;
+    }
+
     barbeiros.push(nome);
 
+    await syncBarbearia();
     renderBarbeiros();
 
     input.value = "";
@@ -348,10 +471,30 @@ function renderBarbeiros() {
 
     const select = document.getElementById("barbeiro");
 
+    if (!lista || !select) return;
+
     lista.innerHTML = "";
 
     select.innerHTML =
         '<option value="">Selecione o barbeiro</option>';
+
+    const limite = PLANOS[planoAtual].limite;
+    const limiteAtingido = barbeiros.length >= limite;
+
+    const usageEl = document.getElementById("barbeirosUsage");
+    if (usageEl) {
+        const limiteTexto = limite === Infinity ? "ilimitado" : limite;
+        usageEl.textContent = `${barbeiros.length} de ${limiteTexto} barbeiro(s) usados — Plano ${PLANOS[planoAtual].nome}`;
+        usageEl.style.color = limiteAtingido && limite !== Infinity ? "#fca5a5" : "#94a3b8";
+    }
+
+    const novoBarbeiroInput = document.getElementById("novoBarbeiro");
+    const addBarbeiroBtn = document.getElementById("addBarbeiroBtn");
+    if (novoBarbeiroInput && addBarbeiroBtn) {
+        novoBarbeiroInput.disabled = limiteAtingido;
+        addBarbeiroBtn.disabled = limiteAtingido;
+        addBarbeiroBtn.textContent = limiteAtingido ? "Limite atingido" : "Adicionar";
+    }
 
     barbeiros.forEach((barbeiro, index) => {
 
@@ -386,10 +529,11 @@ function renderBarbeiros() {
     });
 
 }
-function removeBarbeiro(index) {
+async function removeBarbeiro(index) {
 
     barbeiros.splice(index, 1);
 
+    await syncBarbearia();
     renderBarbeiros();
 
 }
@@ -718,6 +862,7 @@ function bootstrap() {
                 document.getElementById("userBadge").textContent = user.displayName || user.email;
                 showAppScreen();
                 loadClientesFromFirebase();
+                loadBarbeariaFromFirebase();
             } else {
                 currentUser = null;
                 showAuthScreen();
@@ -748,6 +893,36 @@ function closeSidebar() {
         sidebar.classList.remove('open');
         overlay.classList.add('hidden');
     }
+}
+
+function renderPlano() {
+    document.querySelectorAll(".plano-card").forEach((card) => {
+        const plano = Number(card.dataset.plano);
+        card.classList.toggle("plano-atual", plano === planoAtual);
+
+        const btn = card.querySelector(".plano-btn");
+        if (btn) {
+            btn.textContent = plano === planoAtual ? "Plano atual" : (plano > planoAtual ? "Fazer upgrade" : "Mudar para este");
+            btn.disabled = plano === planoAtual;
+        }
+    });
+}
+
+async function selecionarPlano(plano) {
+    plano = Number(plano);
+
+    if (plano === planoAtual) return;
+
+    if (plano < planoAtual && barbeiros.length > PLANOS[plano].limite) {
+        alert(`Você tem ${barbeiros.length} barbeiro(s) cadastrado(s). Remova até ${PLANOS[plano].limite} antes de mudar para o plano ${PLANOS[plano].nome}.`);
+        return;
+    }
+
+    planoAtual = plano;
+    await syncBarbearia();
+    renderPlano();
+    renderBarbeiros();
+    alert(`Plano alterado para ${PLANOS[plano].nome}!`);
 }
 
 function switchView(view) {
