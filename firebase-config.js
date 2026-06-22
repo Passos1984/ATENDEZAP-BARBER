@@ -1,13 +1,9 @@
-// Configuração do Firebase
-// Substitua os valores abaixo com as credenciais do seu projeto no console.firebase.google.com
 const firebaseConfig = {
-  apiKey: "SUA_API_KEY",
-  authDomain: "SEU_PROJETO.firebaseapp.com",
-  projectId: "SEU_PROJETO",
-  storageBucket: "SEU_PROJETO.appspot.com",
-  messagingSenderId: "SEU_MESSAGING_SENDER_ID",
-  appId: "SEU_APP_ID"
+  apiKey: "AIzaSyAU4RPw-GEPdWhXgOEcuBHvpsqAoS9OBPA",
+  authDomain: "atendezap-barber.firebaseapp.com",
+  projectId: "atendezap-barber",
+  storageBucket: "atendezap-barber.firebasestorage.app",
+  messagingSenderId: "463357013064",
+  appId: "1:463357013064:web:7f7f52df31b5250cdd3c7d",
+  measurementId: "G-DSQVL423LZ"
 };
-
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();

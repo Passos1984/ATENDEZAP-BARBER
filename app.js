@@ -268,6 +268,9 @@ function validateEmail(email) {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
+// ------------------------------------------------------------------
+// AQUI ESTÁ A CIRURGIA NO CADASTRO PARA CONVERSAR COM O PAINEL ADMIN
+// ------------------------------------------------------------------
 function registerUser(name, email, password, confirmPassword) {
     if (!name || !email || !password || !confirmPassword) {
         setAuthMessage("Preencha todos os campos.", true);
@@ -294,12 +297,20 @@ function registerUser(name, email, password, confirmPassword) {
                 }).then(() => userCredential.user);
             })
             .then((user) => {
+                // Calcula automaticamente 7 dias de teste para aparecer no Painel Admin
+                let dataVenc = new Date();
+                dataVenc.setDate(dataVenc.getDate() + 7);
+                let vencimentoFormatado = dataVenc.toISOString().split('T')[0];
+
+                // Salva tudo na coleção "barbearias"
                 return window.db.collection("barbearias").doc(user.uid).set({
                     nome: name,
                     email: email,
                     plano: 1,
                     barbeiros: [],
-                    trialStart: new Date().toISOString()
+                    trialStart: new Date().toISOString(),
+                    statusAcesso: "ativo", // Já entra com acesso liberado
+                    dataVencimento: vencimentoFormatado // Data limite preenchida
                 });
             })
             .then(() => {
@@ -312,6 +323,9 @@ function registerUser(name, email, password, confirmPassword) {
         setAuthMessage("Erro: Configure o Firebase para criar contas.", true);
     }
 }
+// ------------------------------------------------------------------
+// FIM DA CIRURGIA
+// ------------------------------------------------------------------
 
 function loginUser(email, password) {
     if (!email || !password) {
@@ -374,6 +388,7 @@ async function saveClient() {
     resetForm();
     render();
 }
+
 function resetForm() {
     document.getElementById("clientForm").reset();
     document.getElementById("status").value = "Pendente";
@@ -443,10 +458,9 @@ function focusClientForm() {
     });
     document.getElementById("nome").focus();
 }
+
 async function addBarbeiro() {
-
     const input = document.getElementById("novoBarbeiro");
-
     const nome = input.value.trim();
 
     if (!nome) return;
@@ -465,18 +479,15 @@ async function addBarbeiro() {
 
     input.value = "";
 }
+
 function renderBarbeiros() {
-
     const lista = document.getElementById("listaBarbeiros");
-
     const select = document.getElementById("barbeiro");
 
     if (!lista || !select) return;
 
     lista.innerHTML = "";
-
-    select.innerHTML =
-        '<option value="">Selecione o barbeiro</option>';
+    select.innerHTML = '<option value="">Selecione o barbeiro</option>';
 
     const limite = PLANOS[planoAtual].limite;
     const limiteAtingido = barbeiros.length >= limite;
@@ -497,26 +508,16 @@ function renderBarbeiros() {
     }
 
     barbeiros.forEach((barbeiro, index) => {
-
         lista.innerHTML += `
       <div class="barbeiro-card">
-
         <div class="barbeiro-info">
-
           <span class="barbeiro-name">
             ${barbeiro}
           </span>
-
-          <button
-            class="btn btn-danger btn-small"
-            onclick="removeBarbeiro(${index})">
-
+          <button class="btn btn-danger btn-small" onclick="removeBarbeiro(${index})">
             Excluir
-
           </button>
-
         </div>
-
       </div>
     `;
 
@@ -525,21 +526,16 @@ function renderBarbeiros() {
         ${barbeiro}
       </option>
     `;
-
     });
-
 }
+
 async function removeBarbeiro(index) {
-
     barbeiros.splice(index, 1);
-
     await syncBarbearia();
     renderBarbeiros();
-
 }
 
 function renderDashboard() {
-
     const hojeDate = new Date();
 
     const hoje = clientes.filter((cliente) => {
@@ -565,11 +561,9 @@ function renderDashboard() {
     seteDiasAtras.setHours(0, 0, 0, 0);
 
     clientes.forEach((cliente) => {
-
         if (cliente.status !== "Concluído") return;
 
         const data = parseDate(cliente.horario);
-
         if (!data) return;
 
         const valor = Number(cliente.valor) || 0;
@@ -586,7 +580,6 @@ function renderDashboard() {
         if (data >= seteDiasAtras && data <= hojeDate) {
             faturamentoSemana += valor;
         }
-
     });
 
     const ticketMedio =
@@ -596,28 +589,20 @@ function renderDashboard() {
 
     document.getElementById("totalClientes").textContent =
         clientes.length;
-
     document.getElementById("agendamentosHoje").textContent =
         hoje;
-
     document.getElementById("pendentes").textContent =
         pendentes;
-
     document.getElementById("concluidos").textContent =
         concluidos;
-
     document.getElementById("faturamentoHoje").textContent =
         formatCurrency(faturamentoHoje);
-
     document.getElementById("faturamentoMes").textContent =
         formatCurrency(faturamentoMes);
-
     document.getElementById("faturamentoSemana").textContent =
         formatCurrency(faturamentoSemana);
-
     document.getElementById("ticketMedio").textContent =
         formatCurrency(ticketMedio);
-
 }
 
 function render() {
@@ -644,65 +629,18 @@ function render() {
 
         lista.innerHTML += `
 <tr>
-
+<td><strong>${cliente.nome}</strong></td>
+<td>${cliente.tel}</td>
+<td>${cliente.servico || "-"}</td>
+<td>${cliente.barbeiro || "-"}</td>
+<td>R$ ${Number(cliente.valor || 0).toFixed(2)}</td>
+<td>${formatDateTime(cliente.horario)}</td>
+<td><span class="status-pill ${statusClass}">${cliente.status || "Pendente"}</span></td>
 <td>
-<strong>${cliente.nome}</strong>
+<button class="btn btn-small btn-secondary" onclick="editClient(${index})">Editar</button>
+<button class="btn btn-small btn-success" onclick="concluirAtendimento(${index})">Concluir</button>
+<button class="btn btn-small btn-danger" onclick="deleteClient(${index})">Excluir</button>
 </td>
-
-<td>
-${cliente.tel}
-</td>
-
-<td>
-${cliente.servico || "-"}
-</td>
-
-<td>
-${cliente.barbeiro || "-"}
-</td>
-
-<td>
-R$ ${Number(cliente.valor || 0).toFixed(2)}
-</td>
-
-<td>
-${formatDateTime(cliente.horario)}
-</td>
-
-<td>
-<span class="status-pill ${statusClass}">
-${cliente.status || "Pendente"}
-</span>
-</td>
-
-<td>
-
-<button
-class="btn btn-small btn-secondary"
-onclick="editClient(${index})">
-
-Editar
-
-</button>
-
-<button
-class="btn btn-small btn-success"
-onclick="concluirAtendimento(${index})">
-
-Concluir
-
-</button>
-
-<button
-class="btn btn-small btn-danger"
-onclick="deleteClient(${index})">
-
-Excluir
-
-</button>
-
-</td>
-
 </tr>
 `;
         select.innerHTML += `<option value="${index}">${cliente.nome}</option>`;
@@ -727,36 +665,24 @@ function sendWhats() {
 
     window.open(url, "_blank");
 }
-function renderFinanceiroBarbeiros() {
 
-    const container =
-        document.getElementById(
-            "financeiroBarbeiros"
-        );
+function renderFinanceiroBarbeiros() {
+    const container = document.getElementById("financeiroBarbeiros");
 
     if (!container) return;
 
     let totais = {};
 
     clientes.forEach(cliente => {
+        if (cliente.status !== "Concluído") return;
 
-        if (
-            cliente.status !== "Concluído"
-        ) return;
-
-        const barbeiro =
-            cliente.barbeiro || "Sem barbeiro";
+        const barbeiro = cliente.barbeiro || "Sem barbeiro";
 
         if (!totais[barbeiro]) {
-
             totais[barbeiro] = 0;
-
         }
 
-        totais[barbeiro] += Number(
-            cliente.valor || 0
-        );
-
+        totais[barbeiro] += Number(cliente.valor || 0);
     });
 
     container.innerHTML = "";
@@ -771,26 +697,15 @@ function renderFinanceiroBarbeiros() {
     Object.entries(totais)
         .sort((a, b) => b[1] - a[1])
         .forEach(([nome, total]) => {
-
             container.innerHTML += `
-
       <div class="card" style="margin-bottom:10px">
-
-        <strong>
-          👨‍🦱 ${nome}
-        </strong>
-
-        <h3>
-          ${formatCurrency(total)}
-        </h3>
-
+        <strong>👨‍🦱 ${nome}</strong>
+        <h3>${formatCurrency(total)}</h3>
       </div>
-
       `;
-
         });
-
 }
+
 function bootstrap() {
     const overlay = document.getElementById('sidebarOverlay');
     const closeSidebarBtn = document.getElementById('closeSidebarBtn');
@@ -875,6 +790,7 @@ function bootstrap() {
     resetForm();
     render();
 }
+
 function openSidebar() {
     const sidebar = document.getElementById('sidebar');
     const overlay = document.getElementById('sidebarOverlay');
@@ -949,4 +865,5 @@ function toggleMenu() {
         openSidebar();
     }
 }
+
 bootstrap();

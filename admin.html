@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel Admin - AtendeZap</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .admin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .dashboard-cards {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .card-metric {
+            background: #1a1a2e;
+            padding: 1.5rem;
+            border-radius: 8px;
+            border: 1px solid #2a2a4a;
+            text-align: center;
+        }
+
+        .card-metric h3 {
+            color: #888;
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .card-metric p {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #e94560;
+        }
+
+        .status-ativo {
+            color: #4caf50;
+            font-weight: bold;
+        }
+
+        .status-bloqueado {
+            color: #f44336;
+            font-weight: bold;
+        }
+
+        .btn-acao {
+            padding: 5px 10px;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .btn-liberar {
+            background: #4caf50;
+            color: white;
+        }
+
+        .btn-bloquear {
+            background: #f44336;
+            color: white;
+        }
+    </style>
+</head>
+
+<body>
+    <main class="content-grid" style="max-width: 1200px; margin: 2rem auto;">
+        <div class="admin-header">
+            <h2>Painel de Controle - AtendeZap</h2>
+            <button onclick="sairAdmin()" class="plano-btn" style="width: auto; padding: 0.5rem 1rem;">Sair</button>
+        </div>
+
+        <!-- Cards de Resumo -->
+        <div class="dashboard-cards">
+            <div class="card-metric">
+                <h3>Total de Barbearias</h3>
+                <p id="totalClientes">0</p>
+            </div>
+            <div class="card-metric">
+                <h3>Licenças Ativas</h3>
+                <p id="totalAtivos" style="color: #4caf50;">0</p>
+            </div>
+            <div class="card-metric">
+                <h3>Faturamento Estimado</h3>
+                <p id="faturamento">R$ 0,00</p>
+            </div>
+        </div>
+
+        <!-- Tabela de Gestão -->
+        <section class="card table-card">
+            <div class="table-wrap">
+                <table style="width: 100%; text-align: left; border-collapse: collapse;">
+                    <thead>
+                        <tr style="border-bottom: 1px solid #2a2a4a;">
+                            <th style="padding: 1rem;">Barbearia / E-mail</th>
+                            <th style="padding: 1rem;">Vencimento</th>
+                            <th style="padding: 1rem;">Status</th>
+                            <th style="padding: 1rem;">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="listaAdminClientes">
+                        <!-- Clientes vão aparecer aqui pelo JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <!-- Scripts do Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+
+    <!-- Puxa a sua chave central e a lógica do painel -->
+    <script src="firebase-config.js"></script>
+    <script src="admin.js"></script>
+</body>
+
+</html>
