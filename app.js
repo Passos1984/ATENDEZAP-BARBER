@@ -138,6 +138,31 @@ async function loadBarbeariaFromFirebase() {
 
         if (doc.exists) {
             const data = doc.data();
+
+            // ==========================================
+            // A TRANCA DO SISTEMA: Bloqueio automático e manual
+            // ==========================================
+            const status = data.statusAcesso || "ativo";
+            const vencimento = data.dataVencimento;
+            
+            // Pega a data de hoje no formato YYYY-MM-DD para comparar certinho
+            const hoje = new Date().toISOString().split('T')[0];
+
+            // Se o admin bloqueou manualmente OU se a data de hoje passou da data de vencimento
+            if (status === "bloqueado" || (vencimento && hoje > vencimento)) {
+                
+                // Aviso que vai aparecer na tela do barbeiro
+                alert("⏳ Seu período de teste expirou ou seu acesso está suspenso. Por favor, chame o suporte no WhatsApp para liberar o sistema.");
+                
+                // Desloga o usuário à força e recarrega a página para a tela inicial
+                firebase.auth().signOut().then(() => {
+                    window.location.reload();
+                });
+                
+                return; // Para a execução aqui, não carrega a agenda nem os clientes!
+            }
+            // ==========================================
+
             planoAtual = data.plano || 1;
             barbeiros = data.barbeiros || [];
             trialStart = data.trialStart || null;
@@ -152,12 +177,19 @@ async function loadBarbeariaFromFirebase() {
             planoAtual = 1;
             barbeiros = [];
             trialStart = new Date().toISOString();
+            
+            let dataVenc = new Date();
+            dataVenc.setDate(dataVenc.getDate() + 7);
+            let vencimentoFormatado = dataVenc.toISOString().split('T')[0];
+
             await ref.set({
                 nome: currentUser.displayName || "",
                 email: currentUser.email || "",
                 plano: planoAtual,
                 barbeiros: barbeiros,
-                trialStart: trialStart
+                trialStart: trialStart,
+                statusAcesso: "ativo",
+                dataVencimento: vencimentoFormatado
             });
         }
 
