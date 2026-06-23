@@ -2,7 +2,8 @@
 const EMAIL_ADMIN = "guilhermecpassos@hotmail.com";
 
 // 1. Proteção da Página: Só você entra!
-auth.onAuthStateChanged(user => {
+// CORREÇÃO: Alterado para firebase.auth() para garantir que o navegador não dê erro de variável indefinida
+firebase.auth().onAuthStateChanged(user => {
     if (user) {
         if (user.email === EMAIL_ADMIN) {
             // Se for o dono, carrega a lista
@@ -20,7 +21,6 @@ auth.onAuthStateChanged(user => {
 
 // 2. Carregar Lista de Barbearias
 function carregarPainel() {
-    // CORREÇÃO: Agora lendo da coleção correta "barbearias"
     db.collection("barbearias").onSnapshot((snapshot) => {
         const lista = document.getElementById("listaAdminClientes");
         lista.innerHTML = "";
@@ -43,7 +43,7 @@ function carregarPainel() {
             const statusClass = dados.statusAcesso === "ativo" ? "status-ativo" : "status-bloqueado";
             const textoStatus = dados.statusAcesso === "ativo" ? "ATIVO" : "BLOQUEADO";
 
-            // Monta a linha da tabela (CORREÇÃO: alterado de dados.nomeBarbearia para dados.nome)
+            // Monta a linha da tabela
             const tr = document.createElement("tr");
             tr.innerHTML = `
                 <td style="padding: 1rem; border-bottom: 1px solid #2a2a4a;">
@@ -79,11 +79,10 @@ function carregarPainel() {
 // 3. Funções de Ação (Aprovar / Bloquear)
 function mudarStatus(idUsuario, novoStatus) {
     if(confirm(`Tem certeza que deseja mudar o status para ${novoStatus.toUpperCase()}?`)) {
-        // CORREÇÃO: Atualizando o status na coleção "barbearias"
         db.collection("barbearias").doc(idUsuario).update({
             statusAcesso: novoStatus
         }).then(() => {
-            console.log("Status atualizado!");
+            console.log("Status updated!");
         }).catch(erro => {
             console.error("Erro ao atualizar status: ", erro);
             alert("Erro ao mudar status. Verifique as regras do Firebase.");
@@ -98,7 +97,6 @@ function salvarVencimento(idUsuario) {
         return;
     }
 
-    // CORREÇÃO: Atualizando a data na coleção "barbearias"
     db.collection("barbearias").doc(idUsuario).update({
         dataVencimento: novaData
     }).then(() => {
@@ -110,7 +108,8 @@ function salvarVencimento(idUsuario) {
 
 // 4. Botão de Sair
 function sairAdmin() {
-    auth.signOut().then(() => {
+    // CORREÇÃO: Alterado para firebase.auth() para evitar erros de execução
+    firebase.auth().signOut().then(() => {
         window.location.href = "index.html";
     });
 }
