@@ -5,122 +5,343 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Painel Admin - AtendeZap</title>
-    <link rel="stylesheet" href="style.css">
     <style>
+        :root {
+            --bg-dark: #0f172a;
+            --card-bg: #1e293b;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --border-color: #334155;
+            --primary: #3b82f6;
+            --success: #22c55e;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            padding: 2rem;
+        }
+
+        /* TELA DE LOGIN DO ADMIN */
+        #adminLoginScreen {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 80vh;
+        }
+
+        .login-box {
+            background: var(--card-bg);
+            padding: 2.5rem;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+
+        .login-box input {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 15px;
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            color: white;
+            font-size: 1rem;
+        }
+
+        /* TELA DO PAINEL */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: none;
+            /* Começa escondida até fazer o login */
+        }
+
         .admin-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .btn-sair {
+            background-color: transparent;
+            color: var(--danger);
+            border: 1px solid var(--danger);
+            padding: 0.5rem 1.5rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
         }
 
         .dashboard-cards {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 1rem;
-            margin-bottom: 2rem;
+            gap: 1.5rem;
+            margin-bottom: 2.5rem;
         }
 
         .card-metric {
-            background: #1a1a2e;
-            padding: 1.5rem;
-            border-radius: 8px;
-            border: 1px solid #2a2a4a;
-            text-align: center;
+            background: var(--card-bg);
+            padding: 2rem;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
         }
 
         .card-metric h3 {
-            color: #888;
-            font-size: 0.9rem;
+            color: var(--text-muted);
+            font-size: 1rem;
             margin-bottom: 0.5rem;
         }
 
         .card-metric p {
-            font-size: 1.8rem;
-            font-weight: bold;
-            color: #e94560;
+            font-size: 2.5rem;
+            font-weight: 700;
         }
 
-        .status-ativo {
-            color: #4caf50;
-            font-weight: bold;
+        .table-container {
+            background: var(--card-bg);
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            overflow: hidden;
         }
 
-        .status-bloqueado {
-            color: #f44336;
-            font-weight: bold;
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
         }
 
-        .btn-acao {
-            padding: 5px 10px;
-            border-radius: 4px;
+        th {
+            background-color: rgba(0, 0, 0, 0.2);
+            padding: 1.2rem 1rem;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        td {
+            padding: 1.2rem 1rem;
+            border-bottom: 1px solid var(--border-color);
+            vertical-align: middle;
+        }
+
+        tr:hover {
+            background-color: rgba(255, 255, 255, 0.02);
+        }
+
+        .pill {
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            display: inline-block;
+        }
+
+        .pill-ativo {
+            background: rgba(34, 197, 94, 0.2);
+            color: var(--success);
+        }
+
+        .pill-bloqueado {
+            background: rgba(239, 68, 68, 0.2);
+            color: var(--danger);
+        }
+
+        .pill-pagante {
+            background: rgba(59, 130, 246, 0.2);
+            color: #60a5fa;
+            border: 1px solid var(--primary);
+        }
+
+        .pill-trial {
+            background: rgba(245, 158, 11, 0.2);
+            color: var(--warning);
+            border: 1px solid var(--warning);
+        }
+
+        .btn {
+            padding: 8px 15px;
+            border-radius: 6px;
             border: none;
             cursor: pointer;
             font-weight: bold;
+            width: 100%;
+            margin-bottom: 5px;
         }
 
         .btn-liberar {
-            background: #4caf50;
+            background-color: var(--success);
             color: white;
         }
 
         .btn-bloquear {
-            background: #f44336;
+            background-color: var(--warning);
             color: white;
+        }
+
+        .btn-excluir {
+            background-color: var(--danger);
+            color: white;
+        }
+
+        .btn-salvar {
+            background-color: var(--border-color);
+            color: white;
+            border: 1px solid #475569;
+            width: auto;
+        }
+
+        input[type="date"] {
+            background: rgba(0, 0, 0, 0.2);
+            color: white;
+            border: 1px solid var(--border-color);
+            padding: 6px 10px;
+            border-radius: 6px;
+        }
+
+        .switch-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 40px;
+            height: 20px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: var(--border-color);
+            border-radius: 20px;
+            transition: .4s;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 14px;
+            width: 14px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            border-radius: 50%;
+            transition: .4s;
+        }
+
+        input:checked+.slider {
+            background-color: var(--primary);
+        }
+
+        input:checked+.slider:before {
+            transform: translateX(20px);
         }
     </style>
 </head>
 
 <body>
-    <main class="content-grid" style="max-width: 1200px; margin: 2rem auto;">
-        <div class="admin-header">
-            <h2>Painel de Controle - AtendeZap</h2>
-            <button onclick="sairAdmin()" class="plano-btn" style="width: auto; padding: 0.5rem 1rem;">Sair</button>
-        </div>
+    <!-- TELA DE LOGIN EXCLUSIVA DO ADMIN -->
+    <div id="adminLoginScreen">
+        <div class="login-box">
+            <h2 style="margin-bottom: 5px;">Acesso Restrito</h2>
+            <p style="color: var(--text-muted); margin-bottom: 20px;">Gestão do SaaS AtendeZap</p>
 
-        <!-- Cards de Resumo -->
+            <input type="email" id="adminEmail" placeholder="E-mail do Administrador">
+            <input type="password" id="adminPassword" placeholder="Senha">
+
+            <button onclick="fazerLoginAdmin()" class="btn btn-liberar">Entrar no Painel</button>
+            <p id="msgErro" style="color: var(--danger); margin-top: 15px; display: none;">Dados incorretos.</p>
+        </div>
+    </div>
+
+    <!-- PAINEL DE CONTROLE (Escondido até logar) -->
+    <div class="container" id="adminDashboard">
+        <header class="admin-header">
+            <h2>Painel de Controle <span style="color: var(--primary);">SaaS</span></h2>
+            <button onclick="sairAdmin()" class="btn-sair">Sair do Painel</button>
+        </header>
+
         <div class="dashboard-cards">
             <div class="card-metric">
-                <h3>Total de Barbearias</h3>
-                <p id="totalClientes">0</p>
+                <h3>Total de Cadastros</h3>
+                <p id="totalClientes" style="color: var(--text-main);">0</p>
             </div>
             <div class="card-metric">
-                <h3>Licenças Ativas</h3>
-                <p id="totalAtivos" style="color: #4caf50;">0</p>
+                <h3>Clientes Pagantes</h3>
+                <p id="totalPagantes" style="color: var(--primary);">0</p>
             </div>
             <div class="card-metric">
-                <h3>Faturamento Estimado</h3>
-                <p id="faturamento">R$ 0,00</p>
+                <h3>Faturamento Real (Mês)</h3>
+                <p id="faturamento" style="color: var(--success);">R$ 0,00</p>
             </div>
         </div>
 
-        <!-- Tabela de Gestão -->
-        <section class="card table-card">
-            <div class="table-wrap">
-                <table style="width: 100%; text-align: left; border-collapse: collapse;">
-                    <thead>
-                        <tr style="border-bottom: 1px solid #2a2a4a;">
-                            <th style="padding: 1rem;">Barbearia / E-mail</th>
-                            <th style="padding: 1rem;">Vencimento</th>
-                            <th style="padding: 1rem;">Status</th>
-                            <th style="padding: 1rem;">Ações</th>
-                        </tr>
-                    </thead>
-                    <tbody id="listaAdminClientes">
-                        <!-- Clientes vão aparecer aqui pelo JavaScript -->
-                    </tbody>
-                </table>
-            </div>
+        <section class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Cliente / E-mail</th>
+                        <th>Financeiro</th>
+                        <th>Vencimento</th>
+                        <th>Status</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody id="listaAdminClientes">
+                    <!-- Gerado via JS -->
+                </tbody>
+            </table>
         </section>
-    </main>
+    </div>
 
     <!-- Scripts do Firebase -->
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 
-    <!-- Puxa a sua chave central e a lógica do painel -->
-    <script src="firebase-config.js"></script>
+    <!-- Conexão Blindada -->
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyAU4RPw-GEPdWhXgOEcuBHvpsqAoS9OBPA",
+            authDomain: "atendezap-barber.firebaseapp.com",
+            projectId: "atendezap-barber",
+            storageBucket: "atendezap-barber.firebasestorage.app",
+            messagingSenderId: "463357013064",
+            appId: "1:463357013064:web:7f7f52df31b5250cdd3c7d",
+            measurementId: "G-DSQVL423LZ"
+        };
+        firebase.initializeApp(firebaseConfig);
+        window.db = firebase.firestore();
+    </script>
+
     <script src="admin.js"></script>
 </body>
 

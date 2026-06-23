@@ -1,115 +1,170 @@
-// O E-mail do Chefe (Acesso exclusivo)
 const EMAIL_ADMIN = "guilhermecpassos@hotmail.com";
 
-// 1. Proteção da Página: Só você entra!
-// CORREÇÃO: Alterado para firebase.auth() para garantir que o navegador não dê erro de variável indefinida
+const PRECOS_PLANOS = {
+    1: 49.90, // Essencial
+    2: 99.90, // Profissional
+    3: 169.90 // Premium
+};
+
+// O LEÃO DE CHÁCARA
 firebase.auth().onAuthStateChanged(user => {
     if (user) {
         if (user.email === EMAIL_ADMIN) {
-            // Se for o dono, carrega a lista
+            document.getElementById("adminLoginScreen").style.display = "none";
+            document.getElementById("adminDashboard").style.display = "block";
             carregarPainel();
         } else {
-            // Se for algum cliente abelhudo
-            alert("Acesso negado. Redirecionando para o aplicativo...");
-            window.location.href = "index.html";
+            firebase.auth().signOut().then(() => {
+                alert("Acesso restrito a administradores. Você será desconectado.");
+                window.location.href = "index.html"; 
+            });
         }
     } else {
-        // Se ninguém estiver logado
-        window.location.href = "index.html";
+        document.getElementById("adminDashboard").style.display = "none";
+        document.getElementById("adminLoginScreen").style.display = "flex";
     }
 });
 
-// 2. Carregar Lista de Barbearias
+function fazerLoginAdmin() {
+    const email = document.getElementById("adminEmail").value.trim();
+    const senha = document.getElementById("adminPassword").value;
+    const msgErro = document.getElementById("msgErro");
+
+    if(!email || !senha) {
+        msgErro.textContent = "Preencha e-mail e senha.";
+        msgErro.style.display = "block";
+        return;
+    }
+
+    firebase.auth().signInWithEmailAndPassword(email, senha)
+        .catch(error => {
+            msgErro.textContent = "E-mail ou senha incorretos.";
+            msgErro.style.display = "block";
+        });
+}
+
+function sairAdmin() {
+    firebase.auth().signOut(); 
+}
+
 function carregarPainel() {
     db.collection("barbearias").onSnapshot((snapshot) => {
         const lista = document.getElementById("listaAdminClientes");
         lista.innerHTML = "";
         
         let total = 0;
-        let ativos = 0;
+        let pagantes = 0;
+        let faturamentoReal = 0;
 
         snapshot.forEach((doc) => {
             const dados = doc.data();
             const id = doc.id;
             
-            // Ignora se for um documento vazio ou sem e-mail para não quebrar a tabela
             if(!dados.email) return;
 
             total++;
             
-            if (dados.statusAcesso === "ativo") ativos++;
+            const isPagante = dados.pagante || false;
+            const planoAtual = dados.plano || 1; // Puxa o plano do banco, ou o 1 por padrão
+            
+            if (isPagante && dados.statusAcesso === "ativo") {
+                pagantes++;
+                faturamentoReal += PRECOS_PLANOS[planoAtual];
+            }
 
-            // Define cor e texto do status
-            const statusClass = dados.statusAcesso === "ativo" ? "status-ativo" : "status-bloqueado";
-            const textoStatus = dados.statusAcesso === "ativo" ? "ATIVO" : "BLOQUEADO";
+            const statusClass = dados.statusAcesso === "ativo" ? "pill-ativo" : "pill-bloqueado";
+            const textoStatus = dados.statusAcesso === "ativo" ? "Liberado" : "BLOQUEADO";
+            
+            const pillFinanceiro = isPagante 
+                ? `<span class="pill pill-pagante">Pagante</span>` 
+                : `<span class="pill pill-trial">Em Teste</span>`;
 
-            // Monta a linha da tabela
+            // CAIXA DE SELEÇÃO DE PLANOS
+            const seletorPlano = `
+                <select onchange="alterarPlano('${id}', this.value)" style="background: rgba(0,0,0,0.2); color: #94a3b8; border: 1px solid #334155; border-radius: 4px; padding: 4px; margin-top: 5px; cursor: pointer;">
+                    <option value="1" ${planoAtual == 1 ? 'selected' : ''}>Essencial (R$ 49,90)</option>
+                    <option value="2" ${planoAtual == 2 ? 'selected' : ''}>Profissional (R$ 99,90)</option>
+                    <option value="3" ${planoAtual == 3 ? 'selected' : ''}>Premium (R$ 169,90)</option>
+                </select>
+            `;
+
             const tr = document.createElement("tr");
             tr.innerHTML = `
-                <td style="padding: 1rem; border-bottom: 1px solid #2a2a4a;">
-                    <strong>${dados.nome || 'Sem Nome'}</strong><br>
-                    <small style="color: #888;">${dados.email}</small>
+                <td>
+                    <strong style="font-size: 1.1rem; color: #fff;">${dados.nome || 'Sem Nome'}</strong><br>
+                    <small style="color: #94a3b8;">${dados.email}</small><br>
+                    ${seletorPlano}
                 </td>
-                <td style="padding: 1rem; border-bottom: 1px solid #2a2a4a;">
-                    <input type="date" id="vencimento-${id}" value="${dados.dataVencimento || ''}" 
-                           style="background: transparent; color: white; border: 1px solid #444; padding: 5px; border-radius: 4px;">
-                    <button onclick="salvarVencimento('${id}')" class="btn-acao" style="background: #555; color: white; margin-left: 5px;">Salvar</button>
+                
+                <td>
+                    <div style="margin-bottom: 8px;">${pillFinanceiro}</div>
+                    <label class="switch-container">
+                        <div class="switch">
+                            <input type="checkbox" ${isPagante ? 'checked' : ''} onchange="alterarPagante('${id}', this.checked)">
+                            <span class="slider"></span>
+                        </div>
+                        <small>Pago</small>
+                    </label>
                 </td>
-                <td style="padding: 1rem; border-bottom: 1px solid #2a2a4a;" class="${statusClass}">
-                    ${textoStatus}
+                
+                <td>
+                    <div style="display: flex; gap: 5px; align-items: center;">
+                        <input type="date" id="vencimento-${id}" value="${dados.dataVencimento || ''}">
+                        <button onclick="salvarVencimento('${id}')" class="btn-salvar" style="padding: 6px; border-radius: 4px;">OK</button>
+                    </div>
                 </td>
-                <td style="padding: 1rem; border-bottom: 1px solid #2a2a4a;">
-                    <button onclick="mudarStatus('${id}', 'ativo')" class="btn-acao btn-liberar">Liberar</button>
-                    <button onclick="mudarStatus('${id}', 'bloqueado')" class="btn-acao btn-bloquear" style="margin-left: 5px;">Bloquear</button>
+                
+                <td>
+                    <span class="pill ${statusClass}">${textoStatus}</span>
+                </td>
+                
+                <td>
+                    <div style="display: flex; flex-direction: column; gap: 5px; max-width: 120px;">
+                        ${dados.statusAcesso === "bloqueado" 
+                            ? `<button onclick="mudarStatus('${id}', 'ativo')" class="btn btn-liberar">Liberar</button>` 
+                            : `<button onclick="mudarStatus('${id}', 'bloqueado')" class="btn btn-bloquear">Suspender</button>`
+                        }
+                        <button onclick="excluirBarbearia('${id}', '${dados.nome || 'este cliente'}')" class="btn btn-excluir">Excluir</button>
+                    </div>
                 </td>
             `;
             lista.appendChild(tr);
         });
 
-        // Atualiza os cards coloridos no topo
         document.getElementById("totalClientes").textContent = total;
-        document.getElementById("totalAtivos").textContent = ativos;
-        
-        // Faturamento Simulado (Calculado em R$ 497)
-        const faturamento = ativos * 497;
-        document.getElementById("faturamento").textContent = "R$ " + faturamento.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+        document.getElementById("totalPagantes").textContent = pagantes;
+        document.getElementById("faturamento").textContent = "R$ " + faturamentoReal.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
     });
 }
 
-// 3. Funções de Ação (Aprovar / Bloquear)
+// NOVA FUNÇÃO: Salvar mudança de plano no banco de dados
+function alterarPlano(idUsuario, novoPlano) {
+    db.collection("barbearias").doc(idUsuario).update({ 
+        plano: parseInt(novoPlano) 
+    }).then(() => {
+        console.log("Plano atualizado com sucesso!");
+    });
+}
+
+function alterarPagante(idUsuario, isChecked) {
+    db.collection("barbearias").doc(idUsuario).update({ pagante: isChecked });
+}
+
 function mudarStatus(idUsuario, novoStatus) {
-    if(confirm(`Tem certeza que deseja mudar o status para ${novoStatus.toUpperCase()}?`)) {
-        db.collection("barbearias").doc(idUsuario).update({
-            statusAcesso: novoStatus
-        }).then(() => {
-            console.log("Status updated!");
-        }).catch(erro => {
-            console.error("Erro ao atualizar status: ", erro);
-            alert("Erro ao mudar status. Verifique as regras do Firebase.");
-        });
+    if(confirm(`Mudar o acesso para ${novoStatus.toUpperCase()}?`)) {
+        db.collection("barbearias").doc(idUsuario).update({ statusAcesso: novoStatus });
     }
 }
 
 function salvarVencimento(idUsuario) {
     const novaData = document.getElementById(`vencimento-${idUsuario}`).value;
-    if(!novaData) {
-        alert("Escolha uma data válida!");
-        return;
-    }
-
-    db.collection("barbearias").doc(idUsuario).update({
-        dataVencimento: novaData
-    }).then(() => {
-        alert("Vencimento atualizado!");
-    }).catch(erro => {
-        console.error("Erro ao atualizar data: ", erro);
-    });
+    if(!novaData) return alert("Escolha uma data válida!");
+    db.collection("barbearias").doc(idUsuario).update({ dataVencimento: novaData })
+        .then(() => alert("Vencimento atualizado!"));
 }
 
-// 4. Botão de Sair
-function sairAdmin() {
-    // CORREÇÃO: Alterado para firebase.auth() para evitar erros de execução
-    firebase.auth().signOut().then(() => {
-        window.location.href = "index.html";
-    });
+function excluirBarbearia(idUsuario, nome) {
+    if(confirm(`⚠️ EXCLUIR DEFINITIVAMENTE a barbearia "${nome}"? Esta ação não pode ser desfeita.`)) {
+        db.collection("barbearias").doc(idUsuario).delete();
+    }
 }
